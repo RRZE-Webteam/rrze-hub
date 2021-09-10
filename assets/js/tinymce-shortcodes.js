@@ -1,0 +1,1 @@
+"use strict";tinymce.PluginManager.add("rrze_shortcode",function(t){if("undefined"!=typeof phpvar)for(i=0;i<phpvar.length;i++)shortcode=phpvar[i].shortcode,t.addMenuItem("insert_"+phpvar[i].name,{id:i,icon:phpvar[i].icon,text:phpvar[i].title,context:"insert",onclick:function(){t.insertContent(phpvar[this.settings.id].shortcode)}})});

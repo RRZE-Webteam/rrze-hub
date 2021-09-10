@@ -1,14 +1,10 @@
 # rrze-hub
-DB based data hub using several API
+DB based data hub
 
 
 V1:
+## Verzeichnisschema
 
-- UnivIS (using Cronjobs on https://github.com/thenickless/rrze-univis-lib)
-- Database = mySQL
-- Tables/Fields are schema.org named
-- Stored Procedures
-- Output 100% Schema-conform https://schema.org/
+- UnivIS (https://github.com/thenickless/rrze-univis-lib)
+- Database = MariaDB
 - Exception Handling returns output usable with https://gitlab.rrze.fau.de/rrze-webteam/rrze-log and https://gitlab.rrze.fau.de/rrze-webteam/rrze-notices 
-
-
