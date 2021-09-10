@@ -534,11 +534,6 @@ END@@
 
 
 
-    SET @sql = CONCAT("INSERT INTO rrze_hub_language (sShort, sLong) VALUES ", aLangIN, " ON DUPLICATE KEY UPDATE sLong = VALUES(sLong)");
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
-
-
 DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE deleteLecture (
