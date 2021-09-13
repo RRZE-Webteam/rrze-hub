@@ -2,6 +2,7 @@
 
     // 100100
     // 420100
+    // RRZE-AI => 420103
 
 
 
@@ -69,6 +70,7 @@ class Functions{
 
         $prepare_vals = [
             $uID,
+            empty($person['key'])?'':$person['key'],
             empty($person['title'])?'':$person['title'],
             empty($person['atitle'])?'':$person['atitle'],
             empty($person['firstname'])?'':$person['firstname'],
@@ -82,7 +84,7 @@ class Functions{
         ];
 
         // insert/update persons
-        $wpdb->query($wpdb->prepare("CALL setPerson(%d,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s, @retID)", $prepare_vals));
+        $wpdb->query($wpdb->prepare("CALL setPerson(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s, @retID)", $prepare_vals));
         if ($wpdb->last_error){
             echo json_encode($wpdb->last_error);
             exit;
@@ -99,6 +101,9 @@ class Functions{
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
         $data = $univis->getData('personAll', NULL);
 
+        // reverse elements order because of orga_position (1. "Leitung", ... N. "Mitarbeiter" referring to the same person => "Leitung" would be overwritten by "Mitarbeiter" in setPerson())
+        $data = array_reverse($data);
+
         $aUsedIDs = [];
 
         foreach ($data as $position => $persons){
@@ -112,6 +117,7 @@ class Functions{
                             empty($location['office'])?'':$location['office'],
                             empty($location['email'])?'':$location['email'],
                             empty($location['tel'])?'':$location['tel'],
+                            empty($location['tel_call'])?'':$location['tel_call'],
                             empty($location['fax'])?'':$location['fax'],
                             empty($location['mobile'])?'':$location['mobile'],
                             empty($location['url'])?'':$location['url'],
@@ -120,7 +126,7 @@ class Functions{
                         ];
 
                         // insert/update locations
-                        $wpdb->query($wpdb->prepare("CALL setLocation(%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+                        $wpdb->query($wpdb->prepare("CALL setLocation(%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
                         if ($wpdb->last_error){
                             echo json_encode($wpdb->last_error);
                             exit;
@@ -281,10 +287,12 @@ class Functions{
                                 empty($term['room']['roomno'])?'':$term['room']['roomno'],
                                 empty($term['room']['buildno'])?'':$term['room']['buildno'],
                                 empty($term['room']['address'])?'':$term['room']['address'],
-                                empty($term['room']['description'])?'':$term['room']['description']
+                                empty($term['room']['description'])?'':$term['room']['description'],
+                                empty($term['room']['north'])?'':$term['room']['north'],
+                                empty($term['room']['east'])?'':$term['room']['east']
                             ];
                             // insert/update room
-                            $wpdb->query($wpdb->prepare("CALL setRoom(%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+                            $wpdb->query($wpdb->prepare("CALL setRoom(%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
                             if ($wpdb->last_error){
                                 echo json_encode($wpdb->last_error);
                                 exit;

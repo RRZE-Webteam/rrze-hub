@@ -15,7 +15,7 @@
 
 CREATE TABLE rrze_hub_univis (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    sUnivisID VARCHAR(30) NOT NULL UNIQUE, 
+    sUnivisID VARCHAR(255) NOT NULL UNIQUE, 
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -24,7 +24,7 @@ CREATE TABLE rrze_hub_univis (
 CREATE TABLE rrze_hub_language (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     sShort VARCHAR(2) NOT NULL UNIQUE,
-    sLong VARCHAR(30) NOT NULL,
+    sLong VARCHAR(255) NOT NULL,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -33,7 +33,7 @@ CREATE TABLE rrze_hub_language (
 CREATE TABLE rrze_hub_lecturetype (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     sShort VARCHAR(2) NOT NULL UNIQUE,
-    sLong VARCHAR(30) NOT NULL, 
+    sLong VARCHAR(255) NOT NULL, 
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -42,16 +42,16 @@ CREATE TABLE rrze_hub_lecturetype (
 CREATE TABLE rrze_hub_lecture (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     univisID INT NOT NULL, 
-    sKey VARCHAR(30) NOT NULL UNIQUE, 
-    sName VARCHAR(30), 
-    sEctsname VARCHAR(30), 
+    sKey VARCHAR(255) NOT NULL UNIQUE, 
+    sName VARCHAR(255), 
+    sEctsname VARCHAR(255), 
     languageID INT NOT NULL, 
     lecturetypeID INT NOT NULL,  
-    sUrl VARCHAR(30) NOT NULL,
+    sUrl VARCHAR(255) NOT NULL,
     sSummary TEXT NOT NULL,
     iSws INT(2) NOT NULL,
     bEcts BOOLEAN NOT NULL DEFAULT 0,
-    sEctscredits VARCHAR(30),
+    sEctscredits VARCHAR(255),
     bBeginners BOOLEAN NOT NULL DEFAULT 0,
     bEarlystudy BOOLEAN NOT NULL DEFAULT 0,
     bGuest BOOLEAN NOT NULL DEFAULT 0,
@@ -68,16 +68,17 @@ CREATE TABLE rrze_hub_lecture (
 CREATE TABLE rrze_hub_person (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     univisID INT NOT NULL, 
-    sTitle VARCHAR(30), 
-    sAtitle VARCHAR(30), 
-    sFirstname VARCHAR(30) NOT NULL,
-    sLastname VARCHAR(30) NOT NULL,
-    sDepartment VARCHAR(30), 
-    sOrganization VARCHAR(30), 
-    sWork VARCHAR(30) NOT NULL,
-    sOrgaposition VARCHAR(30),
+    sKey VARCHAR(255), 
+    sTitle VARCHAR(255), 
+    sAtitle VARCHAR(255), 
+    sFirstname VARCHAR(255) NOT NULL,
+    sLastname VARCHAR(255) NOT NULL,
+    sDepartment VARCHAR(255), 
+    sOrganization VARCHAR(255), 
+    sWork VARCHAR(255),
+    sOrgaposition VARCHAR(255),
     iOrgaOrder INT,
-    sTitleLong VARCHAR(30),
+    sTitleLong VARCHAR(255),
     UNIQUE(univisID, sFirstname, sLastname),
     FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
         ON DELETE CASCADE,
@@ -104,8 +105,8 @@ CREATE TABLE rrze_hub_course (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     lectureID INT NOT NULL,
     roomID INT NOT NULL,
-    sRepeat VARCHAR(30),
-    sExclude VARCHAR(30),
+    sRepeat VARCHAR(255),
+    sExclude VARCHAR(255),
     tStart TIME NOT NULL,
     tEnd TIME NOT NULL,
     UNIQUE(lectureID, roomID, tStart, tEnd, sRepeat, sExclude),
@@ -125,13 +126,15 @@ CREATE TABLE rrze_hub_job (
 
 CREATE TABLE rrze_hub_room (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    sKey VARCHAR(30) NOT NULL UNIQUE, 
-    sName VARCHAR(30), 
-    sShort VARCHAR(30), 
-    sRoomNo VARCHAR(30), 
-    sBuildNo VARCHAR(30), 
-    sAddress VARCHAR(30), 
+    sKey VARCHAR(255) NOT NULL UNIQUE, 
+    sName VARCHAR(255), 
+    sShort VARCHAR(255), 
+    sRoomNo VARCHAR(255), 
+    sBuildNo VARCHAR(255), 
+    sAddress VARCHAR(255), 
     sDescription VARCHAR(255), 
+    sNorth VARCHAR(255), 
+    sEast VARCHAR(255), 
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -141,9 +144,9 @@ CREATE TABLE rrze_hub_officehours (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     tStart TIME NOT NULL,
     tEnd TIME NOT NULL,
-    sOffice VARCHAR(30),
-    sRepeat VARCHAR(30),
-    sComment VARCHAR(30),
+    sOffice VARCHAR(255),
+    sRepeat VARCHAR(255),
+    sComment VARCHAR(255),
     UNIQUE(tStart, tEnd, sOffice, sRepeat, sComment),
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -165,16 +168,16 @@ CREATE TABLE rrze_hub_personOfficehours (
 
 
 
-CREATE TABLE rrze_hub_timeinfo (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    sWeekday VARCHAR(2) NOT NULL,
-    tStart TIME NOT NULL, 
-    tEnd TIME NOT NULL, 
-    bRecurring BOOLEAN DEFAULT TRUE,
-    dEnd DATE, 
-    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- CREATE TABLE rrze_hub_timeinfo (
+--     ID INT AUTO_INCREMENT PRIMARY KEY,
+--     sWeekday VARCHAR(2) NOT NULL,
+--     tStart TIME NOT NULL, 
+--     tEnd TIME NOT NULL, 
+--     bRecurring BOOLEAN DEFAULT TRUE,
+--     dEnd DATE, 
+--     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
 
 
 CREATE TABLE rrze_hub_location (
@@ -182,6 +185,7 @@ CREATE TABLE rrze_hub_location (
     sOffice VARCHAR(50),
     sEmail VARCHAR(50),
     sTel VARCHAR(50),
+    sTelCall VARCHAR(50),
     sFax VARCHAR(50),
     sMobile VARCHAR(50),
     sUrl VARCHAR(50),
@@ -193,33 +197,33 @@ CREATE TABLE rrze_hub_location (
 );
 
 
-CREATE TABLE rrze_hub_organization (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    locationID INT NOT NULL, 
-    sKey VARCHAR(30), 
-    sName VARCHAR(50) NOT NULL,
-    sUrl VARCHAR(50),
-    sEmail VARCHAR(50),
-    sTel VARCHAR(50),
-    sFax VARCHAR(50),
-    FOREIGN KEY (locationID) REFERENCES rrze_hub_location (ID) 
-        ON DELETE CASCADE,
-    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- CREATE TABLE rrze_hub_organization (
+--     ID INT AUTO_INCREMENT PRIMARY KEY,
+--     locationID INT NOT NULL, 
+--     sKey VARCHAR(255), 
+--     sName VARCHAR(50) NOT NULL,
+--     sUrl VARCHAR(50),
+--     sEmail VARCHAR(50),
+--     sTel VARCHAR(50),
+--     sFax VARCHAR(50),
+--     FOREIGN KEY (locationID) REFERENCES rrze_hub_location (ID) 
+--         ON DELETE CASCADE,
+--     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
 
 
-CREATE TABLE rrze_hub_department (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    sKey VARCHAR(30), 
-    organizationID INT NOT NULL, 
-    sName VARCHAR(50) NOT NULL,
-    sName_en VARCHAR(50),
-    sDesc VARCHAR(50),
-    sDesc_en VARCHAR(50),
-    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+-- CREATE TABLE rrze_hub_department (
+--     ID INT AUTO_INCREMENT PRIMARY KEY,
+--     sKey VARCHAR(255), 
+--     organizationID INT NOT NULL, 
+--     sName VARCHAR(50) NOT NULL,
+--     sName_en VARCHAR(50),
+--     sDesc VARCHAR(50),
+--     sDesc_en VARCHAR(50),
+--     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+--     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+-- );
 
 
 CREATE TABLE rrze_hub_personLocation (
@@ -248,7 +252,7 @@ CREATE TABLE rrze_hub_personLocation (
 DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE setUnivis (
-    sUnivisIDIN VARCHAR(30),
+    sUnivisIDIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_univis.ID - Add/Update univis'
@@ -268,9 +272,9 @@ END@@
 CREATE OR REPLACE PROCEDURE setOfficehours (
     tStartIN TIME,
     tEndIN TIME,
-    sOfficeIN VARCHAR(30),
-    sRepeatIN VARCHAR(30),
-    sCommentIN VARCHAR(30),
+    sOfficeIN VARCHAR(255),
+    sRepeatIN VARCHAR(255),
+    sCommentIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_officehours.ID - Add/Update officehours'
@@ -304,6 +308,7 @@ CREATE OR REPLACE PROCEDURE setLocation (
     IN sOfficeIN VARCHAR(50),
     IN sEmailIN VARCHAR(50),
     IN sTelIN VARCHAR(50),
+    IN sTelCallIN VARCHAR(50),
     IN sFaxIN VARCHAR(50),
     IN sMobileIN VARCHAR(50),
     IN sUrlIN VARCHAR(50),
@@ -314,10 +319,10 @@ CREATE OR REPLACE PROCEDURE setLocation (
 COMMENT 'return: rrze_hub_location.ID - Add/Update location'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_location (sOffice, sEmail, sTel, sFax, sMobile, sUrl, sStreet, sCity) VALUES (sOfficeIN, sEmailIN, sTelIN, sFaxIN, sMobileIN, sUrlIN, sStreetIN, sCityIN)
-    ON DUPLICATE KEY UPDATE sTel = sTelIN, sFax = sFaxIN, sMobile = sMobileIN, sUrl = sUrlIN, sStreet = sStreetIN, sCity = sCityIN;
+    INSERT INTO rrze_hub_location (sOffice, sEmail, sTel, sTelCall, sFax, sMobile, sUrl, sStreet, sCity) VALUES (sOfficeIN, sEmailIN, sTelIN, sTelCallIN, sFaxIN, sMobileIN, sUrlIN, sStreetIN, sCityIN)
+    ON DUPLICATE KEY UPDATE sTel = sTelIN, sTelCall = sTelCallIN, sFax = sFaxIN, sMobile = sMobileIN, sUrl = sUrlIN, sStreet = sStreetIN, sCity = sCityIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_location WHERE sOffice = sOfficeIN AND sEmail = sEmailIN AND sTel = sTelIN AND sFax = sFaxIN AND sMobile = sMobileIN AND sUrl = sUrlIN AND sStreet = sStreetIN AND sCity = sCityIN;
+    SELECT ID INTO retID FROM rrze_hub_location WHERE sOffice = sOfficeIN AND sEmail = sEmailIN AND sTel = sTelIN AND sTelCall = sTelCallIN AND sFax = sFaxIN AND sMobile = sMobileIN AND sUrl = sUrlIN AND sStreet = sStreetIN AND sCity = sCityIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -326,7 +331,7 @@ END@@
 
 CREATE OR REPLACE PROCEDURE setLectureType (
     IN sShortIN VARCHAR(2), 
-    IN sLongIN VARCHAR(30),
+    IN sLongIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_lecturetype.ID - Add/Update lectureType'
@@ -354,25 +359,26 @@ END@@
 
 CREATE OR REPLACE PROCEDURE setPerson (
     IN univisIDIN INT,
-    IN sTitleIN VARCHAR(30), 
-    IN sAtitleIN VARCHAR(30), 
-    IN sFirstnameIN VARCHAR(30), 
-    IN sLastnameIN VARCHAR(30), 
-    IN sDepartmentIN VARCHAR(30), 
-    IN sOrganizationIN VARCHAR(30), 
-    IN sWorkIN VARCHAR(30), 
-    IN sOrgapositionIN VARCHAR(30),
+    IN sKeyIN VARCHAR(255), 
+    IN sTitleIN VARCHAR(255), 
+    IN sAtitleIN VARCHAR(255), 
+    IN sFirstnameIN VARCHAR(255), 
+    IN sLastnameIN VARCHAR(255), 
+    IN sDepartmentIN VARCHAR(255), 
+    IN sOrganizationIN VARCHAR(255), 
+    IN sWorkIN VARCHAR(255), 
+    IN sOrgapositionIN VARCHAR(255),
     IN iOrgaOrderIN INT,
-    IN sTitleLongIN VARCHAR(30),
+    IN sTitleLongIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_person.ID - Add/Update person'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_person (univisID, sTitle, sAtitle, sFirstname, sLastname, sDepartment, sOrganization, sWork, sOrgaposition, iOrgaOrder, sTitleLong) VALUES (univisIDIN, sTitleIN, sAtitleIN, sFirstnameIN, sLastnameIN, sDepartmentIN, sOrganizationIN, sWorkIN, sOrgapositionIN, iOrgaOrderIN, sTitleLongIN)
-    ON DUPLICATE KEY UPDATE univisID = univisIDIN, sTitle = sTitleIN, sAtitle = sAtitleIN, sFirstname = sFirstnameIN, sLastname = sLastnameIN, sDepartment = sDepartmentIN, sOrganization = sOrganizationIN, sWork = sWorkIN, sOrgaposition = sOrgapositionIN, iOrgaOrder = iOrgaOrderIN, sTitleLong = sTitleLongIN;
+    INSERT INTO rrze_hub_person (univisID, sKey, sTitle, sAtitle, sFirstname, sLastname, sDepartment, sOrganization, sWork, sOrgaposition, iOrgaOrder, sTitleLong) VALUES (univisIDIN, sKeyIN, sTitleIN, sAtitleIN, sFirstnameIN, sLastnameIN, sDepartmentIN, sOrganizationIN, sWorkIN, sOrgapositionIN, iOrgaOrderIN, sTitleLongIN)
+    ON DUPLICATE KEY UPDATE univisID = univisIDIN, sKey = sKeyIN, sTitle = sTitleIN, sAtitle = sAtitleIN, sFirstname = sFirstnameIN, sLastname = sLastnameIN, sDepartment = sDepartmentIN, sOrganization = sOrganizationIN, sWork = sWorkIN, sOrgaposition = sOrgapositionIN, iOrgaOrder = iOrgaOrderIN, sTitleLong = sTitleLongIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_person WHERE univisID = univisIDIN AND sTitle = sTitleIN AND sAtitle = sAtitleIN AND sFirstname = sFirstnameIN AND sLastname = sLastnameIN AND sDepartment = sDepartmentIN AND sOrganization = sOrganizationIN AND sWork = sWorkIN AND sOrgaposition = sOrgapositionIN AND iOrgaOrder = iOrgaOrderIN AND sTitleLong = sTitleLongIN;
+    SELECT ID INTO retID FROM rrze_hub_person WHERE univisID = univisIDIN AND sKey = sKeyIN AND sTitle = sTitleIN AND sAtitle = sAtitleIN AND sFirstname = sFirstnameIN AND sLastname = sLastnameIN AND sDepartment = sDepartmentIN AND sOrganization = sOrganizationIN AND sWork = sWorkIN AND sOrgaposition = sOrgapositionIN AND iOrgaOrder = iOrgaOrderIN AND sTitleLong = sTitleLongIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -395,8 +401,8 @@ END@@
 CREATE OR REPLACE PROCEDURE setCourse (
     IN lectureIDIN INT, 
     IN roomIDIN INT, 
-    IN sRepeatIN VARCHAR(30),
-    IN sExcludeIN VARCHAR(30),
+    IN sRepeatIN VARCHAR(255),
+    IN sExcludeIN VARCHAR(255),
     IN tStartIN TIME,
     IN tEndIN TIME
 )
@@ -412,22 +418,24 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setRoom (
-    IN sKeyIN VARCHAR(30), 
-    IN sNameIN VARCHAR(30), 
-    IN sShortIN VARCHAR(30), 
-    IN sRoomNoIN VARCHAR(30), 
-    IN sBuildNoIN VARCHAR(30), 
-    IN sAddressIN VARCHAR(30), 
+    IN sKeyIN VARCHAR(255), 
+    IN sNameIN VARCHAR(255), 
+    IN sShortIN VARCHAR(255), 
+    IN sRoomNoIN VARCHAR(255), 
+    IN sBuildNoIN VARCHAR(255), 
+    IN sAddressIN VARCHAR(255), 
     IN sDescriptionIN VARCHAR(255),
+    IN sNorthIN VARCHAR(255),
+    IN sEastIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_room.ID - Add/Update room'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_room (sKey, sName, sShort, sRoomNo, sBuildNo, sAddress, sDescription) VALUES (sKeyIN, sNameIN, sShortIN, sRoomNoIN, sBuildNoIN, sAddressIN, sDescriptionIN)
-    ON DUPLICATE KEY UPDATE sKey = sKeyIN, sName = sNameIN, sShort = sShortIN, sRoomNo = sRoomNoIN, sBuildNo = sBuildNoIN, sAddress = sAddressIN, sDescription = sDescriptionIN;
+    INSERT INTO rrze_hub_room (sKey, sName, sShort, sRoomNo, sBuildNo, sAddress, sDescription, sNorth, sEast) VALUES (sKeyIN, sNameIN, sShortIN, sRoomNoIN, sBuildNoIN, sAddressIN, sDescriptionIN, sNorthIN, sEastIN)
+    ON DUPLICATE KEY UPDATE sKey = sKeyIN, sName = sNameIN, sShort = sShortIN, sRoomNo = sRoomNoIN, sBuildNo = sBuildNoIN, sAddress = sAddressIN, sDescription = sDescriptionIN, sNorth = sNorthIN, sEast = sEastIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_room WHERE sKey = sKeyIN AND sName = sNameIN AND sShort = sShortIN AND sRoomNo = sRoomNoIN AND sBuildNo = sBuildNoIN AND sAddress = sAddressIN AND sDescription = sDescriptionIN;
+    SELECT ID INTO retID FROM rrze_hub_room WHERE sKey = sKeyIN AND sName = sNameIN AND sShort = sShortIN AND sRoomNo = sRoomNoIN AND sBuildNo = sBuildNoIN AND sAddress = sAddressIN AND sDescription = sDescriptionIN AND sNorth = sNorthIN AND sEast = sEastIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -436,20 +444,20 @@ END@@
 
 CREATE OR REPLACE PROCEDURE setLecture (
     IN univisIDIN INT, 
-    IN sNameIN VARCHAR(30),
-    IN sEctsnameIN VARCHAR(30),
+    IN sNameIN VARCHAR(255),
+    IN sEctsnameIN VARCHAR(255),
     IN lecturetypeIDIN INT, 
     IN languageIDIN INT, 
-    IN sUrlIN VARCHAR(30),
+    IN sUrlIN VARCHAR(255),
     IN iSwsIN INT(2),
     IN bBeginnersIN BOOLEAN,
     IN bEarlystudyIN BOOLEAN,
     IN bGuestIN BOOLEAN,
     IN bEvaluationIN BOOLEAN,
     IN bEctsIN BOOLEAN,
-    IN sEctscreditsIN VARCHAR(30),
+    IN sEctscreditsIN VARCHAR(255),
     IN sSummaryIN TEXT,
-    IN sKeyIN VARCHAR(30),
+    IN sKeyIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
@@ -486,21 +494,21 @@ END@@
 
 CREATE OR REPLACE PROCEDURE storeLecture (
     IN univisIDIN INT,
-    IN sNameIN VARCHAR(30),
-    IN sEctsnameIN VARCHAR(30),
-    IN lectureTypeIN VARCHAR(30), 
+    IN sNameIN VARCHAR(255),
+    IN sEctsnameIN VARCHAR(255),
+    IN lectureTypeIN VARCHAR(255), 
     IN lectureTypeShortIN VARCHAR(2), 
-    IN sUrlIN VARCHAR(30),
+    IN sUrlIN VARCHAR(255),
     IN iSwsIN INT(2),
     IN bBeginnersIN BOOLEAN,
     IN bEarlystudyIN BOOLEAN,
     IN bGuestIN BOOLEAN,
     IN bEvaluationIN BOOLEAN,
     IN bEctsIN BOOLEAN,
-    IN sEctscreditsIN VARCHAR(30),
+    IN sEctscreditsIN VARCHAR(255),
     IN sLanguageIN VARCHAR(2),
     IN sSummaryIN TEXT,
-    IN sKeyIN VARCHAR(30),
+    IN sKeyIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
@@ -523,7 +531,7 @@ END@@
 DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE deleteUnivis (
-    IN sUnivisIDIN VARCHAR(30)
+    IN sUnivisIDIN VARCHAR(255)
 )
 COMMENT 'deletes entries in rrze_hub_univis and cascading all persons and all lectures related to'
 BEGIN 
@@ -573,10 +581,10 @@ END@@
 --     IN bGuestIN BOOLEAN,
 --     IN bEvaluationIN BOOLEAN,
 --     IN bEctsIN BOOLEAN,
---     IN sEctscreditsIN VARCHAR(30),
+--     IN sEctscreditsIN VARCHAR(255),
 --     IN sLanguageIN VARCHAR(2),
 --     IN sSummaryIN TEXT,
---     IN sKeyIN VARCHAR(30),
+--     IN sKeyIN VARCHAR(255),
 --     OUT retID VARCHAR(255)
 -- )
 -- COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
@@ -602,27 +610,129 @@ DELIMITER ;
 
 
 
+
 -- views
+
+
+CREATE OR REPLACE VIEW getPersons AS 
+    SELECT 
+        u.sUnivisID AS UnivisID,
+        p.sKey AS 'key',
+        p.sTitle AS title,
+        p.sTitleLong AS title_long,
+        p.sAtitle AS atitle,
+        p.sFirstname AS firstname,
+        p.sLastname AS lastname,
+        p.sDepartment AS department,
+        p.sOrganization AS organization,
+        p.sOrgaposition AS orga_position,
+        p.iOrgaOrder AS orga_position_order,
+        loc.sOffice AS office,
+        loc.sEmail AS email,
+        loc.sCity AS ort,
+        loc.sStreet AS street,
+        loc.sTel AS tel,
+        loc.sTelCall AS tel_call,
+        loc.sFax AS fax,
+        loc.sUrl AS 'url',
+        oh.tStart AS starttime,
+        oh.tEnd AS endtime,
+        oh.sOffice AS officehours_office,
+        oh.sRepeat AS 'repeat',
+        oh.sComment AS comment
+    FROM 
+        rrze_hub_univis u,
+        rrze_hub_person p
+    LEFT JOIN 
+        (SELECT 
+            pl.personID,
+            l.sOffice,
+            l.sEmail,
+            l.sCity,
+            l.sStreet,
+            l.sTel,
+            l.sTelCall,
+            l.sFax,
+            l.sUrl
+        FROM 
+            rrze_hub_location l,
+            rrze_hub_personLocation pl 
+        WHERE 
+            l.ID = pl.locationID) loc 
+    ON p.ID = loc.personID
+    LEFT JOIN 
+        (SELECT 
+            po.personID,
+            o.tStart,
+            o.tEnd,
+            o.sOffice,
+            o.sRepeat,
+            o.sComment
+        FROM 
+            rrze_hub_officehours o,
+            rrze_hub_personOfficehours po 
+        WHERE 
+            o.ID = po.officehoursID) oh 
+    ON p.ID = oh.personID
+    WHERE 
+        p.univisID = u.ID;
+
+
+
+-- 2DO: add persons to getLectures
 
 CREATE OR REPLACE VIEW getLectures AS 
     SELECT 
         u.sUnivisID AS UnivisID,
-        lec.ID AS ID,
         lec.sName AS title,
-        lec.sEctsname AS title_en,
-        lec.sSummary AS summary,
-        lec.sUrl AS url_description,
+        lec.sEctsname AS ects_name,
+        lang.sShort AS leclanguage,
+        lec.sKey AS 'key',
         lectype.sLong AS lecture_type,
-        lang.sShort AS lang
+        lec.sUrl AS url_description,
+        lec.sSummary AS summary,
+        IF(lec.iSws, CONCAT(lec.iSws, " SWS"), NULL) AS sws,
+        IF(lec.bEcts, "ECTS-Studium", NULL) AS ects,
+        lec.sEctscredits AS ects_cred,
+        IF(lec.bBeginners, "Für Anfänger geeignet", NULL) AS beginners,
+        IF(lec.bEarlystudy, "Frühstudium", NULL) AS fruehstud,
+        IF(lec.bGuest, "Für Gasthörer zugelassen", NULL) AS gast,
+        IF(lec.bEvaluation, "Evaluation", NULL) AS evaluation,
+        co.tStart AS starttime,
+        co.tEnd AS endtime,
+        co.sRepeat AS 'repeat',
+        co.sExclude AS exclude,
+        co.sShort AS short,
+        co.sNorth AS north,
+        co.sEast AS east
     FROM 
         rrze_hub_univis u,
-        rrze_hub_lecture lec,
         rrze_hub_lecturetype lectype,
-        rrze_hub_language lang
+        rrze_hub_language lang,
+        rrze_hub_lecture lec
+    LEFT JOIN 
+        (SELECT 
+            c.lectureID,
+            c.tStart,
+            c.tEnd,
+            c.sRepeat,
+            c.sExclude,
+            r.sShort,
+            r.sNorth,
+            r.sEast
+        FROM 
+            rrze_hub_course c,
+            rrze_hub_room r 
+        WHERE
+            c.roomID = r.ID
+        ) co
+    ON lec.ID = co.lectureID
     WHERE 
         lec.univisID = u.ID AND
         lec.lecturetypeID = lectype.ID AND
         lec.languageID = lang.ID;
+
+
 
 
 
