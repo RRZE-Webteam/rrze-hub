@@ -71,6 +71,7 @@ class Functions{
         $prepare_vals = [
             $uID,
             empty($person['key'])?'':$person['key'],
+            empty($person['person_id'])?'':$person['person_id'],
             empty($person['title'])?'':$person['title'],
             empty($person['atitle'])?'':$person['atitle'],
             empty($person['firstname'])?'':$person['firstname'],
@@ -84,7 +85,7 @@ class Functions{
         ];
 
         // insert/update persons
-        $wpdb->query($wpdb->prepare("CALL setPerson(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s, @retID)", $prepare_vals));
+        $wpdb->query($wpdb->prepare("CALL setPerson(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s, @retID)", $prepare_vals));
         if ($wpdb->last_error){
             echo json_encode($wpdb->last_error);
             exit;
@@ -239,11 +240,12 @@ class Functions{
                     empty($aEntry['ects_cred'])?'':$aEntry['ects_cred'],
                     $lang,
                     empty($aEntry['summary'])?'':$aEntry['summary'],
-                    empty($aEntry['key'])?'':$aEntry['key']
+                    empty($aEntry['key'])?'':$aEntry['key'],
+                    empty($aEntry['lecture_id'])?'':$aEntry['lecture_id']
                 ];
 
                 // insert/update lectures
-                $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s, @retID)", $prepare_vals));
+                $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
 
                 if ($wpdb->last_error){
                     echo json_encode($wpdb->last_error);
