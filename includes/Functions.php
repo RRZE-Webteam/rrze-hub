@@ -25,7 +25,8 @@ class Functions{
 
 
     public function onLoaded() {
-        add_action('update_option_rrze-hub', [$this, 'doSync'], 10, 1 );
+        // add_action('update_option_rrze-hub', [$this, 'doSync'], 10, 1 );
+        add_filter( 'pre_update_option_rrze-hub',  [$this, 'doSync'], 10, 1 );
     }
 
     public function doSync($options) {
@@ -39,17 +40,18 @@ class Functions{
                         if (!empty($options['sync_dataType'])) {
                             if (in_array('persons', $options['sync_dataType'])) {
                                 $aCnt = $this->syncPersons($sUnivisID, $uID);
-                                logIt( $sUnivisID . ' : ' . $aCnt['sync'] . ' persons synchronized and ' . $aCnt['del']  . ' deleted. new');
+                                logIt( $sUnivisID . ' : ' . $aCnt['sync'] . ' persons synchronized and ' . $aCnt['del']  . ' deleted.');
                             }
                             if (in_array('lectures', $options['sync_dataType'])) {
                                 $aCnt = $this->syncLectures($sUnivisID, $uID);
-                                logIt( $sUnivisID . ' : ' . $aCnt['sync'] . ' lectures synchronized and ' . $aCnt['del']  . ' deleted. new');
+                                logIt( $sUnivisID . ' : ' . $aCnt['sync'] . ' lectures synchronized and ' . $aCnt['del']  . ' deleted.');
                             }
                         }
                     }
                 }
             }
         }
+        return $options;
     }
 
     public function getUnivisID($sUnivisID){
@@ -119,7 +121,6 @@ class Functions{
             foreach ($persons as $person){
                 $personID = $this->storePerson($uID, $person);
                 $aUsedIDs[] = $personID;
-                $aCnt['sync']++;
 
                 if (!empty($person['locations'])){
                     foreach ($person['locations'] as $location){
@@ -191,11 +192,16 @@ class Functions{
             }
         }  
 
+
         // delete unused persons
+        $aUsedIDs = array_unique($aUsedIDs);
+
         $prepare_vals = [
             $uID,
             implode(',', $aUsedIDs)
         ];
+
+        $aCnt['sync'] = count($aUsedIDs);
 
         $wpdb->query($wpdb->prepare("CALL deletePerson(%d,%s, @iDel)", $prepare_vals));
         if ($wpdb->last_error){
