@@ -103,29 +103,6 @@ CREATE TABLE rrze_hub_personLecture (
 );
 
 
-CREATE TABLE rrze_hub_course (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    lectureID INT NOT NULL,
-    roomID INT NOT NULL,
-    sRepeat VARCHAR(255),
-    sExclude VARCHAR(255),
-    tStart TIME NOT NULL,
-    tEnd TIME NOT NULL,
-    UNIQUE(lectureID, roomID, tStart, tEnd, sRepeat, sExclude),
-    FOREIGN KEY (lectureID) REFERENCES rrze_hub_lecture (ID) 
-        ON DELETE CASCADE,
-    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-
-CREATE TABLE rrze_hub_job (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
-
 CREATE TABLE rrze_hub_room (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     sKey VARCHAR(255) NOT NULL UNIQUE, 
@@ -137,6 +114,31 @@ CREATE TABLE rrze_hub_room (
     sDescription VARCHAR(255), 
     sNorth VARCHAR(255), 
     sEast VARCHAR(255), 
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE rrze_hub_course (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    lectureID INT NOT NULL,
+    roomID INT NOT NULL,
+    sRepeat VARCHAR(255),
+    sExclude VARCHAR(255),
+    tStart TIME NOT NULL,
+    tEnd TIME NOT NULL,
+    UNIQUE(lectureID, roomID, tStart, tEnd, sRepeat, sExclude),
+    FOREIGN KEY (lectureID) REFERENCES rrze_hub_lecture (ID) 
+        ON DELETE CASCADE,
+    FOREIGN KEY (roomID) REFERENCES rrze_hub_room (ID) 
+        ON DELETE CASCADE,
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE rrze_hub_job (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -412,9 +414,7 @@ CREATE OR REPLACE PROCEDURE setCourse (
 COMMENT 'Add/Update course'
 BEGIN
     START TRANSACTION;
-    -- INSERT INTO rrze_hub_course (personIDIN, sRepeat, sExclude, tStart, tEnd) VALUES (personID, sRepeatIN, sExcludeIN, tStartIN, tEndIN)
     INSERT INTO rrze_hub_course (lectureID, roomID, sRepeat, sExclude, tStart, tEnd) VALUES (lectureIDIN, roomIDIN, sRepeatIN, sExcludeIN, tStartIN, tEndIN)
-    -- ON DUPLICATE KEY UPDATE personID = personIDIN, sRepeat = sRepeatIN, sExclude = sExcludeIN, tStart = tStartIN, tEnd = tEndIN;
     ON DUPLICATE KEY UPDATE roomID = roomIDIN, sRepeat = sRepeatIN, sExclude = sExcludeIN, tStart = tStartIN, tEnd = tEndIN;
     COMMIT;
 END@@
@@ -551,7 +551,8 @@ DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE deleteLecture (
     IN univisIDIN INT,
-    IN sIDIN TEXT
+    IN sIDIN TEXT,
+    OUT iDel INT
 )
 COMMENT 'deletes lectures'
 BEGIN 
@@ -559,6 +560,7 @@ BEGIN
     SET @sql = CONCAT("DELETE FROM rrze_hub_lecture WHERE univisID = ", univisIDIN, " AND ID NOT IN (", sIDIN, ")");
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
+    SELECT ROW_COUNT() INTO iDel;
 END@@
 
 
@@ -566,7 +568,8 @@ DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE deletePerson (
     IN univisIDIN INT,
-    IN sIDIN TEXT
+    IN sIDIN TEXT,
+    OUT iDel INT
 )
 COMMENT 'deletes persons'
 BEGIN 
@@ -574,6 +577,7 @@ BEGIN
     SET @sql = CONCAT("DELETE FROM rrze_hub_person WHERE univisID = ", univisIDIN, " AND ID NOT IN (", sIDIN, ")");
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
+    SELECT ROW_COUNT() INTO iDel;
 END@@
 
 
@@ -651,6 +655,7 @@ CREATE OR REPLACE VIEW getPersons AS
     ON p.ID = oh.personID
     WHERE 
         p.univisID = u.ID;
+
 
 
 CREATE OR REPLACE VIEW getLectures AS 

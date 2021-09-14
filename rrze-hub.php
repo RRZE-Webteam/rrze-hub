@@ -4,7 +4,7 @@
 Plugin Name:     RRZE Hub
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-hub
 Description:     Basic template for all WordPress CMS plugins.
-Version:         0.2.3
+Version:         0.2.4
 Author:          RRZE Webteam
 Author URI:      https://blogs.fau.de/webworking/
 License:         GNU General Public License v2
@@ -19,6 +19,21 @@ namespace RRZE\Hub;
 defined('ABSPATH') || exit;
 
 use RRZE\Hub\Main;
+
+$s = array(
+    '/^((http|https):\/\/)?(www.)+/i',
+    '/\//',
+    '/[^A-Za-z0-9\-]/'
+);
+$r = array(
+    '',
+    '-',
+    '-'
+);
+
+define( 'HUBLOGFILE', plugin_dir_path( __FILE__) . 'rrze-faq-' . preg_replace( $s, $r,  get_bloginfo( 'url' ) ) . '.log' );
+
+
 
 // Laden der Konfigurationsdatei
 require_once __DIR__ . '/config/config.php';

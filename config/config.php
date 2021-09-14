@@ -57,6 +57,10 @@ function getSections()
             'id'    => 'sync',
             'title' => __('Synchronization', 'rrze-hub')
         ],
+		[
+            'id' => 'hublog',
+            'title' => __('Logfile', 'rrze-faq' )
+      ]
     ];
 }
 
@@ -68,15 +72,6 @@ function getFields()
 {
     return [
         'sync' => [
-            // [
-            //     'name'              => 'univis_url',
-            //     'label'             => __('Link zu <b><i>Univ</i>IS</b>', 'rrze-univis'),
-            //     'desc'              => __('', 'rrze-univis'),
-            //     'placeholder'       => __('', 'rrze-univis'),
-            //     'type'              => 'text',
-            //     'default'           => 'https://univis.uni-erlangen.de',
-            //     'sanitize_callback' => 'esc_url_raw'
-            // ],
             [
                 'name'        => 'univisIDs',
                 'label'       => __('Univis IDs', 'rrze-hub'),
@@ -101,7 +96,32 @@ function getFields()
                     'rooms'   => __('Räume', 'rrze-hub'),
                 ]
             ],
+			[
+				'name' => 'autosync',
+				'label' => __('Mode', 'rrze-hub' ),
+				'desc' => __('Synchronize automatically', 'rrze-hub' ),
+				'type' => 'checkbox',
+			],
+			[
+				'name' => 'frequency',
+				'label' => __('Frequency', 'rrze-hub' ),
+				'desc' => '',
+				'default' => 'daily',
+				'options' => [
+					'daily' => __('daily', 'rrze-hub' ),
+					'twicedaily' => __('twicedaily', 'rrze-hub' )
+				],
+				'type' => 'select'
+			],
+
         ],
+    	'hublog' => [
+        	[
+          		'name' => 'hublogfile',
+          		'type' => 'logfile',
+          		'default' => HUBLOGFILE
+        	]
+      	]
     ];
 }
 
@@ -203,4 +223,22 @@ function getShortcodeSettings(){
         ]
     ];
 }
+
+
+function logIt( $msg ){
+	date_default_timezone_set('Europe/Berlin');
+	$msg = date("Y-m-d H:i:s") . ' | ' . $msg;
+	if ( file_exists( HUBLOGFILE ) ){
+		$content = file_get_contents( HUBLOGFILE );
+		$content = $msg . "\n" . $content;
+	}else {
+		$content = $msg;
+	}
+	file_put_contents( HUBLOGFILE, $content, LOCK_EX);
+}
+  
+function deleteLogfile(){
+	unlink( HUBLOGFILE );
+}
+
 

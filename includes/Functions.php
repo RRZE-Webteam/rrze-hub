@@ -10,6 +10,8 @@ namespace RRZE\Hub;
 
 defined('ABSPATH') || exit;
 
+use function RRZE\Hub\Config\logIt;
+
 
 class Functions{
     protected $pluginFile;
@@ -23,24 +25,25 @@ class Functions{
 
 
     public function onLoaded() {
-        // add_action('update_option_rrze-hub', [$this, 'doSync'] );
-        add_filter( 'pre_update_option_rrze-hub',  [$this, 'doSync'], 10, 1 );
+        add_action('update_option_rrze-hub', [$this, 'doSync'], 10, 1 );
     }
 
-    public function doSync() {
-        if (!empty($_POST['rrze-hub']['sync_univisIDs'])){
-            $aUnivisIDs = explode("\n", $_POST['rrze-hub']['sync_univisIDs']);
+    public function doSync($options) {
+        if (!empty($options['sync_univisIDs'])){
+            $aUnivisIDs = explode("\n", $options['sync_univisIDs']);
             foreach($aUnivisIDs as $sUnivisID){
                 $sUnivisID = trim($sUnivisID);
                 if (!empty($sUnivisID)){
                     $uID = $this->getUnivisID($sUnivisID);
                     if (!empty($uID)){
-                        if (!empty($_POST['rrze-hub']['sync_dataType'])) {
-                            if (in_array('persons', $_POST['rrze-hub']['sync_dataType'])) {
-                                $this->syncPersons($sUnivisID, $uID);
+                        if (!empty($options['sync_dataType'])) {
+                            if (in_array('persons', $options['sync_dataType'])) {
+                                $aCnt = $this->syncPersons($sUnivisID, $uID);
+                                logIt( $sUnivisID . ' : ' . $aCnt['sync'] . ' persons synchronized and ' . $aCnt['del']  . ' deleted. new');
                             }
-                            if (in_array('lectures', $_POST['rrze-hub']['sync_dataType'])) {
-                                $this->syncLectures($sUnivisID, $uID);
+                            if (in_array('lectures', $options['sync_dataType'])) {
+                                $aCnt = $this->syncLectures($sUnivisID, $uID);
+                                logIt( $sUnivisID . ' : ' . $aCnt['sync'] . ' lectures synchronized and ' . $aCnt['del']  . ' deleted. new');
                             }
                         }
                     }
@@ -98,6 +101,11 @@ class Functions{
     public function syncPersons($sUnivisID, $uID) {
         global $wpdb;
 
+        $aCnt = [
+            'sync' => 0,
+            'del' => 0
+        ];
+
         $data = '';
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
         $data = $univis->getData('personAll', NULL);
@@ -111,6 +119,7 @@ class Functions{
             foreach ($persons as $person){
                 $personID = $this->storePerson($uID, $person);
                 $aUsedIDs[] = $personID;
+                $aCnt['sync']++;
 
                 if (!empty($person['locations'])){
                     foreach ($person['locations'] as $location){
@@ -188,16 +197,24 @@ class Functions{
             implode(',', $aUsedIDs)
         ];
 
-        $wpdb->query($wpdb->prepare("CALL deletePerson(%d,%s)", $prepare_vals));
+        $wpdb->query($wpdb->prepare("CALL deletePerson(%d,%s, @iDel)", $prepare_vals));
         if ($wpdb->last_error){
             echo json_encode($wpdb->last_error);
             exit;
         }
+        $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
+
+        return $aCnt;
     }
 
 
     public function syncLectures($sUnivisID, $uID) {
         global $wpdb;
+
+        $aCnt = [
+            'sync' => 0,
+            'del' => 0
+        ];
 
         $data = '';
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
@@ -253,6 +270,8 @@ class Functions{
                 }
 
                 $lectureID = $wpdb->get_var("SELECT @retID");
+                $aCnt['sync']++;
+
 
                 if (empty($lectureID)){
                     echo 'empty!' . $aEntry['name'] . ' ' . $aEntry['key'];
@@ -329,10 +348,13 @@ class Functions{
             implode(',', $aUsedIDs)
         ];
 
-        $wpdb->query($wpdb->prepare("CALL deleteLecture(%d,%s)", $prepare_vals));
+        $wpdb->query($wpdb->prepare("CALL deleteLecture(%d,%s, @iDel)", $prepare_vals));
         if ($wpdb->last_error){
             echo json_encode($wpdb->last_error);
             exit;
         }
+        $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
+
+        return $aCnt;
     }
 }
