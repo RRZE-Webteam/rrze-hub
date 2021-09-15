@@ -192,6 +192,7 @@ CREATE TABLE rrze_hub_location (
     sTelCall VARCHAR(50),
     sFax VARCHAR(50),
     sMobile VARCHAR(50),
+    sMobileCall VARCHAR(50),
     sUrl VARCHAR(50),
     sStreet VARCHAR(50),
     sCity VARCHAR(50),
@@ -315,6 +316,7 @@ CREATE OR REPLACE PROCEDURE setLocation (
     IN sTelCallIN VARCHAR(50),
     IN sFaxIN VARCHAR(50),
     IN sMobileIN VARCHAR(50),
+    IN sMobileCallIN VARCHAR(50),
     IN sUrlIN VARCHAR(50),
     IN sStreetIN VARCHAR(50),
     IN sCityIN VARCHAR(50),
@@ -323,10 +325,10 @@ CREATE OR REPLACE PROCEDURE setLocation (
 COMMENT 'return: rrze_hub_location.ID - Add/Update location'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_location (sOffice, sEmail, sTel, sTelCall, sFax, sMobile, sUrl, sStreet, sCity) VALUES (sOfficeIN, sEmailIN, sTelIN, sTelCallIN, sFaxIN, sMobileIN, sUrlIN, sStreetIN, sCityIN)
-    ON DUPLICATE KEY UPDATE sTel = sTelIN, sTelCall = sTelCallIN, sFax = sFaxIN, sMobile = sMobileIN, sUrl = sUrlIN, sStreet = sStreetIN, sCity = sCityIN;
+    INSERT INTO rrze_hub_location (sOffice, sEmail, sTel, sTelCall, sFax, sMobile, sMobileCall, sUrl, sStreet, sCity) VALUES (sOfficeIN, sEmailIN, sTelIN, sTelCallIN, sFaxIN, sMobileIN, sMobileCallIN, sUrlIN, sStreetIN, sCityIN)
+    ON DUPLICATE KEY UPDATE sTel = sTelIN, sTelCall = sTelCallIN, sFax = sFaxIN, sMobile = sMobileIN, sMobileCall = sMobileCallIN, sUrl = sUrlIN, sStreet = sStreetIN, sCity = sCityIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_location WHERE sOffice = sOfficeIN AND sEmail = sEmailIN AND sTel = sTelIN AND sTelCall = sTelCallIN AND sFax = sFaxIN AND sMobile = sMobileIN AND sUrl = sUrlIN AND sStreet = sStreetIN AND sCity = sCityIN;
+    SELECT ID INTO retID FROM rrze_hub_location WHERE sOffice = sOfficeIN AND sEmail = sEmailIN AND sTel = sTelIN AND sTelCall = sTelCallIN AND sFax = sFaxIN AND sMobile = sMobileIN AND sMobileCall = sMobileCallIN AND sUrl = sUrlIN AND sStreet = sStreetIN AND sCity = sCityIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -604,14 +606,17 @@ CREATE OR REPLACE VIEW getPersons AS
         p.sLastname AS lastname,
         p.sDepartment AS department,
         p.sOrganization AS organization,
+        p.sWork AS work,
         p.sOrgaposition AS orga_position,
         p.iOrgaOrder AS orga_position_order,
         loc.sOffice AS office,
         loc.sEmail AS email,
-        loc.sCity AS ort,
+        loc.sCity AS city,
         loc.sStreet AS street,
         loc.sTel AS tel,
         loc.sTelCall AS tel_call,
+        loc.sMobile AS mobile,
+        loc.sMobileCall AS mobile_call,
         loc.sFax AS fax,
         loc.sUrl AS 'url',
         oh.tStart AS starttime,
@@ -631,6 +636,8 @@ CREATE OR REPLACE VIEW getPersons AS
             l.sStreet,
             l.sTel,
             l.sTelCall,
+            l.sMobile,
+            l.sMobileCall,
             l.sFax,
             l.sUrl
         FROM 
