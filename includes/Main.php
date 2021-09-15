@@ -18,12 +18,11 @@ class Main {
     public function onLoaded() {
         add_action('wp_enqueue_scripts', [$this, 'enqueueScripts']);
 
-        // Settings-Klasse wird instanziiert.
         $settings = new Settings($this->pluginFile);
         $settings->onLoaded();
 
-        $functions = new Functions($this->pluginFile);
-        $functions->onLoaded();
+        $sync = new Sync($this->pluginFile);
+        $sync->onLoaded();
 
         add_action( 'update_option_rrze-hub', [$this, 'setCronjob'] );
         add_action( 'rrze-hub_cronjob', [$this, 'runCronjob'] );
