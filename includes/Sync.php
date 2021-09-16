@@ -30,6 +30,31 @@ class Sync{
     }
 
     public function doSync($options) {
+
+
+        // Test:
+
+        // mitarbeiter_orga => univisID && groupBy => department
+        // mitarbeiter_einzeln => person_id || name
+        // mitarbeiter_all => univisID && groupBy => orga_position
+
+        $aAtts = [
+            // 'person_id' => '40014582',
+            // 'name' => 'WIESE,wolfgang',
+            'univisID' => '420100',
+            // 'groupBy' => 'department',
+            'groupBy' => 'work',
+        ];
+
+        $functions = new Functions($this->pluginFile);
+        $data = $functions->getPerson($aAtts);
+
+        echo '<pre>';
+        var_dump($data);
+        echo '</pre>';
+        exit;
+
+
         if (!empty($options['sync_univisIDs'])){
             $aUnivisIDs = explode("\n", $options['sync_univisIDs']);
             foreach($aUnivisIDs as $sUnivisID){
@@ -110,7 +135,8 @@ class Sync{
 
         $data = '';
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
-        $data = $univis->getData('personAll', NULL);
+        // $data = $univis->getData('personAll', NULL);
+        $data = $univis->getData('personByOrga', NULL);
 
         // reverse elements order because of orga_position (1. "Leitung", ... N. "Mitarbeiter" referring to the same person => "Leitung" would be overwritten by "Mitarbeiter" in setPerson())
         $data = array_reverse($data);

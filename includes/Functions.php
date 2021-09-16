@@ -17,88 +17,104 @@ class Functions{
     }
 
 
-        // tests:
-        // $aAtts = [
-        //     'univisid' => '40014582',
-        //     // 'name' => 'WIESE,wolfgang'
-        // ];
 
+        // 2DO:
 
-        // $test = $this->getPerson($aAtts);
+        // personByOrga => group by department
+        // personByOrgaPhonebook => group by department
+        // personAll => group by work and sort by orga_postion_order
 
-        // echo '<pre>';
-        // var_dump($test);
-        // exit;
+        // exception handling
+
+        // getLectures mit allen Variationen
+
+        // setJobs
+        // getJobs
 
 
 
     public function getPerson($aAtts){
         global $wpdb;
-
         $aRet = [];
-        $sClause = '';
 
-        if (!empty($aAtts['univisid'])){
-            // person by its univis ID
+        if (!empty($aAtts['person_id'])){
+            // get person by its univis ID
             $prepare_vals = [
-                $aAtts['univisid']
+                $aAtts['person_id']
             ];
             $sClause = "person_id = %s";
-
-            // echo 'by ID<br>';
-
         }elseif(!empty($aAtts['name'])){
-            // person by its fullname (= lastname,firstname)
+            // get person by its fullname (= lastname,firstname)
             $parts = explode(',', strtolower($aAtts['name']));
             $prepare_vals = [
                 !empty($parts[0]) ? trim($parts[0]) : '',
                 !empty($parts[1]) ? trim($parts[1]) : ''
             ];
             $sClause = "LOWER(lastname) = %s AND LOWER(firstname) = %s";
-
-            // echo 'by name<br>';
+        }elseif(!empty($aAtts['univisID'])){
+            // get all persons refering to univisID (=department)
+            $prepare_vals = [
+                $aAtts['univisID']
+            ];
+            $sClause = "univisID = %s ORDER BY orga_position_order";
+            $bAllRows = TRUE;
         }
 
-        if (!empty($sClause)){
-            $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM getPersons WHERE " . $sClause, $prepare_vals), ARRAY_A);
-            if ($wpdb->last_error){
-                echo json_encode($wpdb->last_error);
-                exit;
-            }
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM getPersons WHERE " . $sClause, $prepare_vals), ARRAY_A);
+        if ($wpdb->last_error){
+            echo json_encode($wpdb->last_error);
+            exit;
+        }
 
-            if (!empty($rows[0])){
-                $aRet = [
-                    'title' => $rows[0]['title'],
-                    'atitle' => $rows[0]['atitle'],
-                    'firstname' => $rows[0]['firstname'],
-                    'lastname' => $rows[0]['lastname'],
-                    'work' => $rows[0]['work'],
-                    'organization' => $rows[0]['organization'],
-                    'department' => $rows[0]['department'],
-                    'locations' => [],
-                    'officehours' => []
-                ];
-                foreach ($rows as $row) {
-                    $aRet['locations'][] = [
-                        'tel' => $row['tel'],
-                        'tel_call' => $row['tel_call'],
-                        'mobile' => $row['mobile'],
-                        'mobile_call' => $row['mobile_call'],
-                        'street' => $row['street'],
-                        'city' => $row['city'],
-                        'office' => $row['office']
-                    ];
-                    $aRet['officehours'][] = [
-                        'repeat' => $row['repeat'],
-                        'starttime' => $row['starttime'],
-                        'endtime' => $row['endtime'],
-                        'office' => $row['officehours_office'],
-                        'comment' => $row['comment']
-                    ];
-                }
-                $aRet['locations'] = array_unique($aRet['locations'], SORT_REGULAR);
-                $aRet['officehours'] = array_unique($aRet['officehours'], SORT_REGULAR);
+        $aLocations = [];
+        $aOfficehours = [];
+
+        foreach ($rows as $row) {
+            $aRet[$row['ID']] = [
+                'person_id' => $row['person_id'],
+                'title' => $row['title'],
+                'title_long' => $row['title_long'],
+                'atitle' => $row['atitle'],
+                'firstname' => $row['firstname'],
+                'lastname' => $row['lastname'],
+                'work' => $row['work'],
+                'organization' => $row['organization'],
+                'department' => $row['department'],
+            ];
+
+            $aLocations[$row['ID']][$row['locationID']] = [
+                'tel' => $row['tel'],
+                'tel_call' => $row['tel_call'],
+                'mobile' => $row['mobile'],
+                'mobile_call' => $row['mobile_call'],
+                'street' => $row['street'],
+                'city' => $row['city'],
+                'office' => $row['office']
+            ];
+            $aRet[$row['ID']]['locations'] = $aLocations[$row['ID']];
+
+            $aOfficehours[$row['ID']][$row['officehoursID']] = [
+                'repeat' => $row['repeat'],
+                'starttime' => $row['starttime'],
+                'endtime' => $row['endtime'],
+                'office' => $row['officehours_office'],
+                'comment' => $row['comment']
+            ];
+            $aRet[$row['ID']]['officehours'] = $aOfficehours[$row['ID']];
+        }
+
+        // group by  - 2DO: if $aAtts['groupBy'] is a valid field in $aRet => reset($aRet) and check if isset($aRet[0][$aAtts['groupBy']])
+        if (!empty($aAtts['groupBy'])){
+            // echo 'found';
+            // exit;
+            $aTmp = [];
+            foreach($aRet as $person){
+                //  empty() könnte "Mitarbeiter" sein
+                // if (!empty($person[$aAtts['groupBy']])){
+                    $aTmp[$person[$aAtts['groupBy']]][] = $person; 
+                // }
             }
+            $aRet = $aTmp;
         }
 
         return $aRet;

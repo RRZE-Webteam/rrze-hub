@@ -609,6 +609,7 @@ CREATE OR REPLACE VIEW getPersons AS
         p.sWork AS work,
         p.sOrgaposition AS orga_position,
         p.iOrgaOrder AS orga_position_order,
+        loc.ID AS locationID,
         loc.sOffice AS office,
         loc.sEmail AS email,
         loc.sCity AS city,
@@ -619,6 +620,7 @@ CREATE OR REPLACE VIEW getPersons AS
         loc.sMobileCall AS mobile_call,
         loc.sFax AS fax,
         loc.sUrl AS 'url',
+        oh.ID AS officehoursID,
         oh.tStart AS starttime,
         oh.tEnd AS endtime,
         oh.sOffice AS officehours_office,
@@ -630,6 +632,7 @@ CREATE OR REPLACE VIEW getPersons AS
     LEFT JOIN 
         (SELECT 
             pl.personID,
+            l.ID,
             l.sOffice,
             l.sEmail,
             l.sCity,
@@ -649,6 +652,7 @@ CREATE OR REPLACE VIEW getPersons AS
     LEFT JOIN 
         (SELECT 
             po.personID,
+            o.ID,
             o.tStart,
             o.tEnd,
             o.sOffice,
@@ -661,7 +665,9 @@ CREATE OR REPLACE VIEW getPersons AS
             o.ID = po.officehoursID) oh 
     ON p.ID = oh.personID
     WHERE 
-        p.univisID = u.ID;
+        p.univisID = u.ID
+    ORDER BY 
+        p.sLastname ASC;
 
 
 
