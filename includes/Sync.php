@@ -30,31 +30,6 @@ class Sync{
     }
 
     public function doSync($options) {
-
-
-        // Test:
-
-        // mitarbeiter_orga => univisID && groupBy => department
-        // mitarbeiter_einzeln => person_id || name
-        // mitarbeiter_all => univisID && groupBy => orga_position
-
-        $aAtts = [
-            // 'person_id' => '40014582',
-            // 'name' => 'WIESE,wolfgang',
-            'univisID' => '420100',
-            // 'groupBy' => 'department',
-            'groupBy' => 'work',
-        ];
-
-        $functions = new Functions($this->pluginFile);
-        $data = $functions->getPerson($aAtts);
-
-        echo '<pre>';
-        var_dump($data);
-        echo '</pre>';
-        exit;
-
-
         if (!empty($options['sync_univisIDs'])){
             $aUnivisIDs = explode("\n", $options['sync_univisIDs']);
             foreach($aUnivisIDs as $sUnivisID){

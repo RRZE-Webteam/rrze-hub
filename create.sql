@@ -621,8 +621,8 @@ CREATE OR REPLACE VIEW getPersons AS
         loc.sFax AS fax,
         loc.sUrl AS 'url',
         oh.ID AS officehoursID,
-        oh.tStart AS starttime,
-        oh.tEnd AS endtime,
+        oh.tStarttime AS starttime,
+        oh.tEndtime AS endtime,
         oh.sOffice AS officehours_office,
         oh.sRepeat AS 'repeat',
         oh.sComment AS comment
@@ -653,8 +653,8 @@ CREATE OR REPLACE VIEW getPersons AS
         (SELECT 
             po.personID,
             o.ID,
-            o.tStart,
-            o.tEnd,
+            DATE_FORMAT(o.tStart, "%H:%i") AS tStarttime,
+            DATE_FORMAT(o.tEnd, "%H:%i") AS tEndtime,
             o.sOffice,
             o.sRepeat,
             o.sComment
@@ -662,7 +662,9 @@ CREATE OR REPLACE VIEW getPersons AS
             rrze_hub_officehours o,
             rrze_hub_personOfficehours po 
         WHERE 
-            o.ID = po.officehoursID) oh 
+            o.ID = po.officehoursID
+        ORDER BY 
+            FIELD(o.sRepeat, 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So')) oh 
     ON p.ID = oh.personID
     WHERE 
         p.univisID = u.ID
