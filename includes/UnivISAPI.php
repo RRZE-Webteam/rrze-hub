@@ -495,6 +495,12 @@ class UnivISAPI {
                                     }
                                     $persons['Person.' . $personKey]['orga_position'] = $orgaDetails['description'];
                                     $persons['Person.' . $personKey]['orga_position_order'] = $orgaDetails['joborder'];
+
+                                    // BUG
+                                    $persons['Person.' . $personKey]['positions'][] = [
+                                        'name' => $orgaDetails['description'],
+                                        'order' => $orgaDetails['joborder']
+                                    ];
                                 }
                             }
                         }

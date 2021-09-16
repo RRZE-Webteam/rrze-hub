@@ -84,13 +84,11 @@ class Sync{
             empty($person['department'])?'':$person['department'],
             empty($person['organization'])?'':$person['organization'],
             empty($person['work'])?'':$person['work'],
-            empty($person['orga_position'])?'':$person['orga_position'],
-            empty($person['orga_position_order'])?0:$person['orga_position_order'],
             empty($person['title_long'])?'':$person['title_long']
         ];
 
         // insert/update persons
-        $wpdb->query($wpdb->prepare("CALL setPerson(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s, @retID)", $prepare_vals));
+        $wpdb->query($wpdb->prepare("CALL setPerson(%d,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s, @retID)", $prepare_vals));
         if ($wpdb->last_error){
             echo json_encode($wpdb->last_error);
             exit;
@@ -109,9 +107,14 @@ class Sync{
         ];
 
         $data = '';
-        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
-        // $data = $univis->getData('personAll', NULL);
-        $data = $univis->getData('personByOrga', NULL);
+        $aUnivISAtts = [
+            'zeige_jobs' => '',
+            'ignoriere_jobs' => ''
+        ];
+
+        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, $aUnivISAtts);
+        $data = $univis->getData('personAll', NULL);
+        // $data = $univis->getData('personByOrga', NULL); // liefert keine orga_position
 
         // reverse elements order because of orga_position (1. "Leitung", ... N. "Mitarbeiter" referring to the same person => "Leitung" would be overwritten by "Mitarbeiter" in setPerson())
         $data = array_reverse($data);
@@ -185,6 +188,39 @@ class Sync{
                         ];
 
                         $wpdb->query($wpdb->prepare("CALL setPersonOfficehours(%d,%d)", $prepare_vals));
+                        if ($wpdb->last_error){
+                            echo json_encode($wpdb->last_error);
+                            exit;
+                        }
+                    }
+                }
+
+                if (!empty($person['positions'])){
+                    foreach ($person['positions'] as $position){
+                        $prepare_vals = [
+                            empty($position['name'])?'':$position['name'],
+                        ];
+
+                        // insert/update position
+                        $wpdb->query($wpdb->prepare("CALL setPosition(%s, @retID)", $prepare_vals));
+                        if ($wpdb->last_error){
+                            echo 'setPosition ' . json_encode($wpdb->last_error);
+                            exit;
+                        }
+                        $positionID = $wpdb->get_var("SELECT @retID");
+                        if ($wpdb->last_error){
+                            echo 'get_var position ' . json_encode($wpdb->last_error);
+                            exit;
+                        }
+
+                        // insert/update personPosition
+                        $prepare_vals = [
+                            $personID,
+                            $positionID,
+                            empty($position['order'])?0:$position['order']
+                        ];
+
+                        $wpdb->query($wpdb->prepare("CALL setPersonPosition(%d,%d,%d)", $prepare_vals));
                         if ($wpdb->last_error){
                             echo json_encode($wpdb->last_error);
                             exit;
