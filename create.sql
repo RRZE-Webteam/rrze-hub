@@ -23,10 +23,11 @@ CREATE TABLE rrze_hub_univis (
 
 CREATE TABLE rrze_hub_organization (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    univisID INT NOT NULL, 
+    -- univisID INT NOT NULL, 
+    sUnivisID VARCHAR(255), 
     sName VARCHAR(50) NOT NULL UNIQUE,
-    FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
-        ON DELETE CASCADE,
+    -- FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
+    --     ON DELETE CASCADE,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -34,11 +35,12 @@ CREATE TABLE rrze_hub_organization (
 
 CREATE TABLE rrze_hub_department (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    univisID INT NOT NULL, 
+    -- univisID INT NOT NULL, 
+    sUnivisID VARCHAR(255), 
     organizationID INT NOT NULL, 
     sName VARCHAR(50) NOT NULL UNIQUE,
-    FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
-        ON DELETE CASCADE,
+    -- FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
+    --     ON DELETE CASCADE,
     FOREIGN KEY (organizationID) REFERENCES rrze_hub_organization (ID) 
         ON DELETE CASCADE,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -365,7 +367,8 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setOrganization (
-    IN univisIDIN INT,
+    -- IN univisIDIN INT,
+    IN sUnivisIDIN VARCHAR(255), 
     IN sNameIN VARCHAR(255), 
     OUT retID INT
 )
@@ -373,7 +376,7 @@ COMMENT 'return: rrze_hub_organization.ID - Add/Update organization'
 BEGIN
     START TRANSACTION;
     -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
-    INSERT INTO rrze_hub_organization (univisID, sName) VALUES (univisIDIN, sNameIN)
+    INSERT INTO rrze_hub_organization (sUnivisID, sName) VALUES (sUnivisIDIN, sNameIN)
     ON DUPLICATE KEY UPDATE sName = sNameIN; 
     COMMIT;
     SELECT ID INTO retID FROM rrze_hub_organization WHERE sName = sNameIN;
@@ -384,7 +387,8 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setDepartment (
-    IN univisIDIN INT,
+    -- IN univisIDIN INT,
+    IN sUnivisIDIN VARCHAR(255), 
     IN organizationIDIN INT,
     IN sNameIN VARCHAR(255), 
     OUT retID INT
@@ -393,7 +397,7 @@ COMMENT 'return: rrze_hub_department.ID - Add/Update department'
 BEGIN
     START TRANSACTION;
     -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
-    INSERT INTO rrze_hub_department (univisID, organizationID, sName) VALUES (univisIDIN, organizationIDIN, sNameIN)
+    INSERT INTO rrze_hub_department (sUnivisID, organizationID, sName) VALUES (sUnivisIDIN, organizationIDIN, sNameIN)
     ON DUPLICATE KEY UPDATE sName = sNameIN; 
     COMMIT;
     SELECT ID INTO retID FROM rrze_hub_department WHERE sName = sNameIN;
@@ -700,13 +704,15 @@ DELIMITER ;
 
 CREATE OR REPLACE VIEW getPersons AS 
     SELECT 
-        orga.sUnivisID AS univisID,
+        orga.org_univisID,
+        orga.dep_univisID,
         p.ID, 
         p.sKey AS 'key',
         p.sPersonID AS person_id,
         p.sTitle AS title,
         p.sTitleLong AS title_long,
         p.sAtitle AS atitle,
+        CONCAT(p.sFirstname, ',', p.sLastname) AS 'name',
         p.sFirstname AS firstname,
         p.sLastname AS lastname,
         orga.organization,
@@ -736,20 +742,19 @@ CREATE OR REPLACE VIEW getPersons AS
         rrze_hub_person p
     LEFT JOIN
         (SELECT
-            u.sUnivisID,
             pd.personID,
+            org.sUnivisID AS org_univisID,
+            dep.sUnivisID AS dep_univisID,
             org.sName AS organization,
             dep.sName AS department,
             pd.sWork
         FROM 
             rrze_hub_organization org,
             rrze_hub_department dep,
-            rrze_hub_personDepartment pd,
-            rrze_hub_univis u
+            rrze_hub_personDepartment pd
         WHERE 
             org.ID = dep.organizationID AND 
-            dep.ID = pd.departmentID AND
-            (u.ID = org.univisID OR u.ID = dep.univisID)
+            dep.ID = pd.departmentID
         ) orga 
     ON p.ID = orga.personID
     LEFT JOIN 
@@ -799,10 +804,7 @@ CREATE OR REPLACE VIEW getPersons AS
             rrze_hub_personPosition pp
         WHERE
             ps.ID = pp.positionID) pos
-    ON p.ID = pos.personID
-    ORDER BY 
-        p.sLastname ASC;
-
+    ON p.ID = pos.personID;
 
 
 CREATE OR REPLACE VIEW getLectures AS 

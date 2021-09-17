@@ -106,6 +106,10 @@ class Sync{
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
         $data = $univis->getData('personAll', NULL);
 
+        // echo '<pre>';
+        // var_dump($data);
+        // exit;
+
         $aUsedIDs = [];
 
         foreach ($data as $person){
@@ -114,12 +118,12 @@ class Sync{
             $aUsedIDs[] = $personID;
 
             $prepare_vals = [
-                $uID,
+                $sUnivisID,
                 empty($person['organization'])?'':$person['organization']
             ];
 
             // insert/update organization
-            $wpdb->query($wpdb->prepare("CALL setOrganization(%d,%s, @retID)", $prepare_vals));
+            $wpdb->query($wpdb->prepare("CALL setOrganization(%s,%s, @retID)", $prepare_vals));
             if ($wpdb->last_error){
                 echo json_encode($wpdb->last_error);
                 exit;
@@ -127,13 +131,13 @@ class Sync{
             $organizationID = $wpdb->get_var("SELECT @retID");
 
             $prepare_vals = [
-                $uID,
+                $sUnivisID,
                 $organizationID,
                 empty($person['department'])?'':$person['department']
             ];
 
             // insert/update department
-            $wpdb->query($wpdb->prepare("CALL setDepartment(%d,%d,%s, @retID)", $prepare_vals));
+            $wpdb->query($wpdb->prepare("CALL setDepartment(%s,%d,%s, @retID)", $prepare_vals));
             if ($wpdb->last_error){
                 echo json_encode($wpdb->last_error);
                 exit;
@@ -257,21 +261,21 @@ class Sync{
             }
         }
 
-        // delete unused persons
-        $aUsedIDs = array_unique($aUsedIDs);
+        // // delete unused persons
+        // $aUsedIDs = array_unique($aUsedIDs);
 
-        $prepare_vals = [
-            implode(',', $aUsedIDs)
-        ];
+        // $prepare_vals = [
+        //     implode(',', $aUsedIDs)
+        // ];
 
-        $aCnt['sync'] = count($aUsedIDs);
+        // $aCnt['sync'] = count($aUsedIDs);
 
-        $wpdb->query($wpdb->prepare("CALL deletePerson(%s, @iDel)", $prepare_vals));
-        if ($wpdb->last_error){
-            echo json_encode($wpdb->last_error);
-            exit;
-        }
-        $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
+        // $wpdb->query($wpdb->prepare("CALL deletePerson(%s, @iDel)", $prepare_vals));
+        // if ($wpdb->last_error){
+        //     echo json_encode($wpdb->last_error);
+        //     exit;
+        // }
+        // $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
 
         return $aCnt;
     }
