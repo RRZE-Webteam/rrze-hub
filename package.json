@@ -1,6 +1,6 @@
 {
 	"name": "rrze-hub",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "Basic template for all WordPress CMS plugins.",
 	"main": "rrze-hub.php",
 	"scripts": {

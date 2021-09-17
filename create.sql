@@ -712,7 +712,7 @@ CREATE OR REPLACE VIEW getPersons AS
         p.sTitle AS title,
         p.sTitleLong AS title_long,
         p.sAtitle AS atitle,
-        CONCAT(p.sFirstname, ',', p.sLastname) AS 'name',
+        CONCAT(p.sLastname, ',', p.sFirstname) AS 'name',
         p.sFirstname AS firstname,
         p.sLastname AS lastname,
         orga.organization,
