@@ -5,6 +5,7 @@ namespace RRZE\Hub;
 defined('ABSPATH') || exit;
 
 use RRZE\Hub\Settings;
+use function RRZE\Hub\Config\deleteLogfile;
 
 
 class Main {
@@ -24,7 +25,9 @@ class Main {
         $sync = new Sync($this->pluginFile);
         $sync->onLoaded();
 
-        add_action( 'update_option_rrze-hub', [$this, 'setCronjob'] );
+        // add_action( 'update_option_rrze-hub', [$this, 'switchTask'] );
+        add_filter( 'pre_update_option_rrze-hub',  [$this, 'switchTask'], 10, 1 );
+
         add_action( 'rrze-hub_cronjob', [$this, 'runCronjob'] );
     }
 
@@ -32,6 +35,16 @@ class Main {
         wp_register_style('rrze-hub', plugins_url('assets/css/plugin.css', plugin_basename($this->pluginFile)));
     }
 
+
+    public function switchTask($options) {
+        if (isset($_GET['del'])){
+            deleteLogfile();
+        }else{
+            $this->setCronjob();
+        }
+
+        return $options;
+    }
 
     public function runCronjob() {
         $functions = new Functions($this->pluginFile);

@@ -288,15 +288,23 @@ class Settings
         foreach ($this->settingsSections as $section) {
             if ($this->settingsPrefix . $section['id'] != $this->currentTab) {
                 continue;
-            } ?>
-            <div id="<?php echo $this->settingsPrefix . $section['id']; ?>">
-                <form method="post" action="options.php">
-                    <?php settings_fields($this->settingsPrefix . $section['id']); ?>
-                    <?php do_settings_sections($this->settingsPrefix . $section['id']); ?>
-                    <?php submit_button(); ?>
-                </form>
-            </div>
-        <?php
+            }
+            
+            $btn_label = '';
+            $get = '';
+
+            if ( $this->currentTab == $this->settingsPrefix . 'hublog') {
+                $btn_label = __('Delete logfile', 'rrze-faq' );
+                $get = '?del';
+            }
+
+            echo '<div id="' . $this->settingsPrefix . $section['id'] . '">';
+            echo '<form method="post" action="options.php'. $get . '">';
+            settings_fields($this->settingsPrefix . $section['id']);
+            do_settings_sections($this->settingsPrefix . $section['id']);
+            submit_button( $btn_label );
+            echo '</form>';
+            echo '</div>';
         }
     }
 
