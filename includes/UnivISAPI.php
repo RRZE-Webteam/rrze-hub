@@ -66,7 +66,7 @@ class UnivISAPI {
         $data = json_decode( $data, true);
         $data = $this->mapIt($dataType, $data);
         $data = $this->dict($data);
-        $data = $this->sortGroup($dataType, $data);
+        // $data = $this->sortGroup($dataType, $data);
         return $data;
     }
 
@@ -490,13 +490,12 @@ class UnivISAPI {
                         if (isset($orgaDetails['per'])){
                             foreach($orgaDetails['per'] as $personKey){
                                 if (!empty($persons['Person.' . $personKey])){
-                                    if (!empty($persons['Person.' . $personKey]['orga_position'])){
-                                        $persons[] = $persons['Person.' . $personKey];
-                                    }
-                                    $persons['Person.' . $personKey]['orga_position'] = $orgaDetails['description'];
-                                    $persons['Person.' . $personKey]['orga_position_order'] = $orgaDetails['joborder'];
+                                    // if (!empty($persons['Person.' . $personKey]['orga_position'])){
+                                    //     $persons[] = $persons['Person.' . $personKey];
+                                    // }
+                                    // $persons['Person.' . $personKey]['orga_position'] = $orgaDetails['description'];
+                                    // $persons['Person.' . $personKey]['orga_position_order'] = $orgaDetails['joborder'];
 
-                                    // BUG
                                     $persons['Person.' . $personKey]['positions'][] = [
                                         'name' => $orgaDetails['description'],
                                         'order' => $orgaDetails['joborder']

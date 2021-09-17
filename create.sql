@@ -21,6 +21,31 @@ CREATE TABLE rrze_hub_univis (
 );
 
 
+CREATE TABLE rrze_hub_organization (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    univisID INT NOT NULL, 
+    sName VARCHAR(50) NOT NULL UNIQUE,
+    FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
+        ON DELETE CASCADE,
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE rrze_hub_department (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    univisID INT NOT NULL, 
+    organizationID INT NOT NULL, 
+    sName VARCHAR(50) NOT NULL UNIQUE,
+    FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
+        ON DELETE CASCADE,
+    FOREIGN KEY (organizationID) REFERENCES rrze_hub_organization (ID) 
+        ON DELETE CASCADE,
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE rrze_hub_language (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     sShort VARCHAR(2) NOT NULL UNIQUE,
@@ -68,23 +93,32 @@ CREATE TABLE rrze_hub_lecture (
 
 CREATE TABLE rrze_hub_person (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    univisID INT NOT NULL, 
-    sKey VARCHAR(255), 
+    sKey VARCHAR(255) NOT NULL UNIQUE, 
     sPersonID VARCHAR(255), 
     sTitle VARCHAR(255), 
+    sTitleLong VARCHAR(255),
     sAtitle VARCHAR(255), 
     sFirstname VARCHAR(255) NOT NULL,
     sLastname VARCHAR(255) NOT NULL,
-    sDepartment VARCHAR(255), 
-    sOrganization VARCHAR(255), 
-    sWork VARCHAR(255),
-    sTitleLong VARCHAR(255),
-    UNIQUE(univisID, sFirstname, sLastname),
-    FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE rrze_hub_personDepartment (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    personID INT NOT NULL,
+    departmentID INT NOT NULL,
+    sWork TEXT NOT NULL,
+    UNIQUE(personID, departmentID),
+    FOREIGN KEY (personID) REFERENCES rrze_hub_person (ID) 
+        ON DELETE CASCADE,
+    FOREIGN KEY (departmentID) REFERENCES rrze_hub_department (ID) 
         ON DELETE CASCADE,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
 
 
 CREATE TABLE rrze_hub_position (
@@ -224,33 +258,6 @@ CREATE TABLE rrze_hub_location (
 );
 
 
--- CREATE TABLE rrze_hub_organization (
---     ID INT AUTO_INCREMENT PRIMARY KEY,
---     locationID INT NOT NULL, 
---     sKey VARCHAR(255), 
---     sName VARCHAR(50) NOT NULL,
---     sUrl VARCHAR(50),
---     sEmail VARCHAR(50),
---     sTel VARCHAR(50),
---     sFax VARCHAR(50),
---     FOREIGN KEY (locationID) REFERENCES rrze_hub_location (ID) 
---         ON DELETE CASCADE,
---     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
---     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
--- );
-
-
--- CREATE TABLE rrze_hub_department (
---     ID INT AUTO_INCREMENT PRIMARY KEY,
---     sKey VARCHAR(255), 
---     organizationID INT NOT NULL, 
---     sName VARCHAR(50) NOT NULL,
---     sName_en VARCHAR(50),
---     sDesc VARCHAR(50),
---     sDesc_en VARCHAR(50),
---     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
---     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
--- );
 
 
 CREATE TABLE rrze_hub_personLocation (
@@ -357,6 +364,58 @@ BEGIN
 END@@
 
 
+CREATE OR REPLACE PROCEDURE setOrganization (
+    IN univisIDIN INT,
+    IN sNameIN VARCHAR(255), 
+    OUT retID INT
+)
+COMMENT 'return: rrze_hub_organization.ID - Add/Update organization'
+BEGIN
+    START TRANSACTION;
+    -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
+    INSERT INTO rrze_hub_organization (univisID, sName) VALUES (univisIDIN, sNameIN)
+    ON DUPLICATE KEY UPDATE sName = sNameIN; 
+    COMMIT;
+    SELECT ID INTO retID FROM rrze_hub_organization WHERE sName = sNameIN;
+    IF retID <= 0 THEN
+        ROLLBACK;
+    END IF; 
+END@@
+
+
+CREATE OR REPLACE PROCEDURE setDepartment (
+    IN univisIDIN INT,
+    IN organizationIDIN INT,
+    IN sNameIN VARCHAR(255), 
+    OUT retID INT
+)
+COMMENT 'return: rrze_hub_department.ID - Add/Update department'
+BEGIN
+    START TRANSACTION;
+    -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
+    INSERT INTO rrze_hub_department (univisID, organizationID, sName) VALUES (univisIDIN, organizationIDIN, sNameIN)
+    ON DUPLICATE KEY UPDATE sName = sNameIN; 
+    COMMIT;
+    SELECT ID INTO retID FROM rrze_hub_department WHERE sName = sNameIN;
+    IF retID <= 0 THEN
+        ROLLBACK;
+    END IF; 
+END@@
+
+
+CREATE OR REPLACE PROCEDURE setPersonDepartment (
+    IN personIDIN INT,
+    IN departmentIDIN INT,
+    IN sWorkIN VARCHAR(255)
+)
+BEGIN
+    START TRANSACTION;
+    INSERT INTO rrze_hub_personDepartment (personID, departmentID, sWork) VALUES (personIDIN, departmentIDIN, sWorkIN)
+    ON DUPLICATE KEY UPDATE sWork = sWorkIN;
+    COMMIT;
+END@@
+
+
 CREATE OR REPLACE PROCEDURE setPosition (
     IN sNameIN VARCHAR(255), 
     OUT retID INT
@@ -417,26 +476,22 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setPerson (
-    IN univisIDIN INT,
     IN sKeyIN VARCHAR(255), 
     IN sPersonIDIN VARCHAR(255), 
     IN sTitleIN VARCHAR(255), 
+    IN sTitleLongIN VARCHAR(255),
     IN sAtitleIN VARCHAR(255), 
     IN sFirstnameIN VARCHAR(255), 
     IN sLastnameIN VARCHAR(255), 
-    IN sDepartmentIN VARCHAR(255), 
-    IN sOrganizationIN VARCHAR(255), 
-    IN sWorkIN VARCHAR(255), 
-    IN sTitleLongIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_person.ID - Add/Update person'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_person (univisID, sKey, sPersonID, sTitle, sAtitle, sFirstname, sLastname, sDepartment, sOrganization, sWork, sTitleLong) VALUES (univisIDIN, sKeyIN, sPersonIDIN, sTitleIN, sAtitleIN, sFirstnameIN, sLastnameIN, sDepartmentIN, sOrganizationIN, sWorkIN, sTitleLongIN)
-    ON DUPLICATE KEY UPDATE univisID = univisIDIN, sKey = sKeyIN, sPersonID = sPersonIDIN, sTitle = sTitleIN, sAtitle = sAtitleIN, sFirstname = sFirstnameIN, sLastname = sLastnameIN, sDepartment = sDepartmentIN, sOrganization = sOrganizationIN, sWork = sWorkIN, sTitleLong = sTitleLongIN;
+    INSERT INTO rrze_hub_person (sKey, sPersonID, sTitle, sTitleLong, sAtitle, sFirstname, sLastname) VALUES (sKeyIN, sPersonIDIN, sTitleIN, sTitleLongIN, sAtitleIN, sFirstnameIN, sLastnameIN)
+    ON DUPLICATE KEY UPDATE sPersonID = sPersonIDIN, sTitle = sTitleIN, sTitleLong = sTitleLongIN, sAtitle = sAtitleIN, sFirstname = sFirstnameIN, sLastname = sLastnameIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_person WHERE univisID = univisIDIN AND sKey = sKeyIN AND sPersonID = sPersonIDIN AND sTitle = sTitleIN AND sAtitle = sAtitleIN AND sFirstname = sFirstnameIN AND sLastname = sLastnameIN AND sDepartment = sDepartmentIN AND sOrganization = sOrganizationIN AND sWork = sWorkIN AND sTitleLong = sTitleLongIN;
+    SELECT ID INTO retID FROM rrze_hub_person WHERE sKey = sKeyIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -620,14 +675,13 @@ END@@
 DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE deletePerson (
-    IN univisIDIN INT,
     IN sIDIN TEXT,
     OUT iDel INT
 )
 COMMENT 'deletes persons'
 BEGIN 
     IF sIDIN = '' THEN SET sIDIN = '0'; END IF;
-    SET @sql = CONCAT("DELETE FROM rrze_hub_person WHERE univisID = ", univisIDIN, " AND ID NOT IN (", sIDIN, ")");
+    SET @sql = CONCAT("DELETE FROM rrze_hub_person WHERE ID NOT IN (", sIDIN, ")");
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
     SELECT ROW_COUNT() INTO iDel;
@@ -646,8 +700,8 @@ DELIMITER ;
 
 CREATE OR REPLACE VIEW getPersons AS 
     SELECT 
-        u.sUnivisID AS univisID,
-        p.ID AS ID,
+        orga.sUnivisID AS univisID,
+        p.ID, 
         p.sKey AS 'key',
         p.sPersonID AS person_id,
         p.sTitle AS title,
@@ -655,9 +709,9 @@ CREATE OR REPLACE VIEW getPersons AS
         p.sAtitle AS atitle,
         p.sFirstname AS firstname,
         p.sLastname AS lastname,
-        p.sDepartment AS department,
-        p.sOrganization AS organization,
-        p.sWork AS work,
+        orga.organization,
+        orga.department,
+        orga.sWork AS work,
         pos.sName AS position,
         pos.iOrder AS position_order,
         UCASE(LEFT(p.sLastname, 1)) AS letter,
@@ -679,8 +733,25 @@ CREATE OR REPLACE VIEW getPersons AS
         oh.sRepeat AS 'repeat',
         oh.sComment AS comment
     FROM 
-        rrze_hub_univis u,
         rrze_hub_person p
+    LEFT JOIN
+        (SELECT
+            u.sUnivisID,
+            pd.personID,
+            org.sName AS organization,
+            dep.sName AS department,
+            pd.sWork
+        FROM 
+            rrze_hub_organization org,
+            rrze_hub_department dep,
+            rrze_hub_personDepartment pd,
+            rrze_hub_univis u
+        WHERE 
+            org.ID = dep.organizationID AND 
+            dep.ID = pd.departmentID AND
+            (u.ID = org.univisID OR u.ID = dep.univisID)
+        ) orga 
+    ON p.ID = orga.personID
     LEFT JOIN 
         (SELECT 
             pl.personID,
@@ -722,15 +793,13 @@ CREATE OR REPLACE VIEW getPersons AS
         (SELECT
             pp.personID,
             ps.sName,
-            ps.iOrder
+            pp.iOrder
         FROM
             rrze_hub_position ps,
             rrze_hub_personPosition pp
         WHERE
             ps.ID = pp.positionID) pos
     ON p.ID = pos.personID
-    WHERE 
-        p.univisID = u.ID
     ORDER BY 
         p.sLastname ASC;
 

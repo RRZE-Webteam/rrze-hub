@@ -70,25 +70,21 @@ class Sync{
     }
 
 
-    public function storePerson($uID, $person){
+    public function storePerson($person){
         global $wpdb;
 
         $prepare_vals = [
-            $uID,
             empty($person['key'])?'':$person['key'],
             empty($person['person_id'])?'':$person['person_id'],
             empty($person['title'])?'':$person['title'],
+            empty($person['title_long'])?'':$person['title_long'],
             empty($person['atitle'])?'':$person['atitle'],
             empty($person['firstname'])?'':$person['firstname'],
-            empty($person['lastname'])?'':$person['lastname'],
-            empty($person['department'])?'':$person['department'],
-            empty($person['organization'])?'':$person['organization'],
-            empty($person['work'])?'':$person['work'],
-            empty($person['title_long'])?'':$person['title_long']
+            empty($person['lastname'])?'':$person['lastname']
         ];
 
         // insert/update persons
-        $wpdb->query($wpdb->prepare("CALL setPerson(%d,%s,%s,%s,%s,%s,%s,%s,%s,%d,%s, @retID)", $prepare_vals));
+        $wpdb->query($wpdb->prepare("CALL setPerson(%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
         if ($wpdb->last_error){
             echo json_encode($wpdb->last_error);
             exit;
@@ -107,141 +103,170 @@ class Sync{
         ];
 
         $data = '';
-        $aUnivISAtts = [
-            'zeige_jobs' => '',
-            'ignoriere_jobs' => ''
-        ];
-
-        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, $aUnivISAtts);
+        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
         $data = $univis->getData('personAll', NULL);
-        // $data = $univis->getData('personByOrga', NULL); // liefert keine orga_position
-
-        // reverse elements order because of orga_position (1. "Leitung", ... N. "Mitarbeiter" referring to the same person => "Leitung" would be overwritten by "Mitarbeiter" in setPerson())
-        $data = array_reverse($data);
 
         $aUsedIDs = [];
 
-        foreach ($data as $position => $persons){
-            foreach ($persons as $person){
-                $personID = $this->storePerson($uID, $person);
-                $aUsedIDs[] = $personID;
+        foreach ($data as $person){
+            $personID = $this->storePerson($person);
 
-                if (!empty($person['locations'])){
-                    foreach ($person['locations'] as $location){
-                        $prepare_vals = [
-                            empty($location['office'])?'':$location['office'],
-                            empty($location['email'])?'':$location['email'],
-                            empty($location['tel'])?'':$location['tel'],
-                            empty($location['tel_call'])?'':$location['tel_call'],
-                            empty($location['fax'])?'':$location['fax'],
-                            empty($location['mobile'])?'':$location['mobile'],
-                            empty($location['mobile_call'])?'':$location['mobile_call'],
-                            empty($location['url'])?'':$location['url'],
-                            empty($location['street'])?'':$location['street'],
-                            empty($location['ort'])?'':$location['ort']
-                        ];
+            $aUsedIDs[] = $personID;
 
-                        // insert/update locations
-                        $wpdb->query($wpdb->prepare("CALL setLocation(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
-                        if ($wpdb->last_error){
-                            echo json_encode($wpdb->last_error);
-                            exit;
-                        }
-                        $locationID = $wpdb->get_var("SELECT @retID");
+            $prepare_vals = [
+                $uID,
+                empty($person['organization'])?'':$person['organization']
+            ];
 
-                        // insert/update personLocation
-                        $prepare_vals = [
-                            $personID,
-                            $locationID,
-                        ];
+            // insert/update organization
+            $wpdb->query($wpdb->prepare("CALL setOrganization(%d,%s, @retID)", $prepare_vals));
+            if ($wpdb->last_error){
+                echo json_encode($wpdb->last_error);
+                exit;
+            }
+            $organizationID = $wpdb->get_var("SELECT @retID");
 
-                        $wpdb->query($wpdb->prepare("CALL setPersonLocation(%d,%d)", $prepare_vals));
-                        if ($wpdb->last_error){
-                            echo json_encode($wpdb->last_error);
-                            exit;
-                        }
+            $prepare_vals = [
+                $uID,
+                $organizationID,
+                empty($person['department'])?'':$person['department']
+            ];
+
+            // insert/update department
+            $wpdb->query($wpdb->prepare("CALL setDepartment(%d,%d,%s, @retID)", $prepare_vals));
+            if ($wpdb->last_error){
+                echo json_encode($wpdb->last_error);
+                exit;
+            }
+            $departmentID = $wpdb->get_var("SELECT @retID");
+
+            $prepare_vals = [
+                $personID,
+                $departmentID,
+                empty($person['work'])?'':$person['work']
+            ];
+
+            // insert/update personDepartment
+            $wpdb->query($wpdb->prepare("CALL setPersonDepartment(%d,%d,%s)", $prepare_vals));
+            if ($wpdb->last_error){
+                echo json_encode($wpdb->last_error);
+                exit;
+            }
+
+            if (!empty($person['locations'])){
+                foreach ($person['locations'] as $location){
+                    $prepare_vals = [
+                        empty($location['office'])?'':$location['office'],
+                        empty($location['email'])?'':$location['email'],
+                        empty($location['tel'])?'':$location['tel'],
+                        empty($location['tel_call'])?'':$location['tel_call'],
+                        empty($location['fax'])?'':$location['fax'],
+                        empty($location['mobile'])?'':$location['mobile'],
+                        empty($location['mobile_call'])?'':$location['mobile_call'],
+                        empty($location['url'])?'':$location['url'],
+                        empty($location['street'])?'':$location['street'],
+                        empty($location['ort'])?'':$location['ort']
+                    ];
+
+                    // insert/update locations
+                    $wpdb->query($wpdb->prepare("CALL setLocation(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo json_encode($wpdb->last_error);
+                        exit;
                     }
-                }
+                    $locationID = $wpdb->get_var("SELECT @retID");
 
-                if (!empty($person['officehours'])){
-                    foreach ($person['officehours'] as $officehour){
-                        $prepare_vals = [
-                            empty($officehour['starttime'])?'':$officehour['starttime'],
-                            empty($officehour['endtime'])?'':$officehour['endtime'],
-                            empty($officehour['office'])?'':$officehour['office'],
-                            empty($officehour['repeat'])?'':$officehour['repeat'],
-                            empty($officehour['comment'])?'':$officehour['comment'],
-                        ];
+                    // insert/update personLocation
+                    $prepare_vals = [
+                        $personID,
+                        $locationID,
+                    ];
 
-                        // insert/update officehours
-                        $wpdb->query($wpdb->prepare("CALL setOfficehours(%s,%s,%s,%s,%s, @retID)", $prepare_vals));
-                        if ($wpdb->last_error){
-                            echo json_encode($wpdb->last_error);
-                            exit;
-                        }
-                        $officehourID = $wpdb->get_var("SELECT @retID");
-
-                        // insert/update personOfficehours
-                        $prepare_vals = [
-                            $personID,
-                            $officehourID,
-                        ];
-
-                        $wpdb->query($wpdb->prepare("CALL setPersonOfficehours(%d,%d)", $prepare_vals));
-                        if ($wpdb->last_error){
-                            echo json_encode($wpdb->last_error);
-                            exit;
-                        }
-                    }
-                }
-
-                if (!empty($person['positions'])){
-                    foreach ($person['positions'] as $position){
-                        $prepare_vals = [
-                            empty($position['name'])?'':$position['name'],
-                        ];
-
-                        // insert/update position
-                        $wpdb->query($wpdb->prepare("CALL setPosition(%s, @retID)", $prepare_vals));
-                        if ($wpdb->last_error){
-                            echo 'setPosition ' . json_encode($wpdb->last_error);
-                            exit;
-                        }
-                        $positionID = $wpdb->get_var("SELECT @retID");
-                        if ($wpdb->last_error){
-                            echo 'get_var position ' . json_encode($wpdb->last_error);
-                            exit;
-                        }
-
-                        // insert/update personPosition
-                        $prepare_vals = [
-                            $personID,
-                            $positionID,
-                            empty($position['order'])?0:$position['order']
-                        ];
-
-                        $wpdb->query($wpdb->prepare("CALL setPersonPosition(%d,%d,%d)", $prepare_vals));
-                        if ($wpdb->last_error){
-                            echo json_encode($wpdb->last_error);
-                            exit;
-                        }
+                    $wpdb->query($wpdb->prepare("CALL setPersonLocation(%d,%d)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo json_encode($wpdb->last_error);
+                        exit;
                     }
                 }
             }
-        }  
 
+            if (!empty($person['officehours'])){
+                foreach ($person['officehours'] as $officehour){
+                    $prepare_vals = [
+                        empty($officehour['starttime'])?'':$officehour['starttime'],
+                        empty($officehour['endtime'])?'':$officehour['endtime'],
+                        empty($officehour['office'])?'':$officehour['office'],
+                        empty($officehour['repeat'])?'':$officehour['repeat'],
+                        empty($officehour['comment'])?'':$officehour['comment'],
+                    ];
+
+                    // insert/update officehours
+                    $wpdb->query($wpdb->prepare("CALL setOfficehours(%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo json_encode($wpdb->last_error);
+                        exit;
+                    }
+                    $officehourID = $wpdb->get_var("SELECT @retID");
+
+                    // insert/update personOfficehours
+                    $prepare_vals = [
+                        $personID,
+                        $officehourID,
+                    ];
+
+                    $wpdb->query($wpdb->prepare("CALL setPersonOfficehours(%d,%d)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo json_encode($wpdb->last_error);
+                        exit;
+                    }
+                }
+            }
+
+            if (!empty($person['positions'])){
+                foreach ($person['positions'] as $position){
+                    $prepare_vals = [
+                        empty($position['name'])?'':$position['name'],
+                    ];
+
+                    // insert/update position
+                    $wpdb->query($wpdb->prepare("CALL setPosition(%s, @retID)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo 'setPosition ' . json_encode($wpdb->last_error);
+                        exit;
+                    }
+                    $positionID = $wpdb->get_var("SELECT @retID");
+
+                    if ($wpdb->last_error){
+                        echo 'get_var position ' . json_encode($wpdb->last_error);
+                        exit;
+                    }
+
+                    // insert/update personPosition
+                    $prepare_vals = [
+                        $personID,
+                        $positionID,
+                        empty($position['order'])?0:$position['order']
+                    ];
+
+                    $wpdb->query($wpdb->prepare("CALL setPersonPosition(%d,%d,%d)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo json_encode($wpdb->last_error);
+                        exit;
+                    }
+                }
+            }
+        }
 
         // delete unused persons
         $aUsedIDs = array_unique($aUsedIDs);
 
         $prepare_vals = [
-            $uID,
             implode(',', $aUsedIDs)
         ];
 
         $aCnt['sync'] = count($aUsedIDs);
 
-        $wpdb->query($wpdb->prepare("CALL deletePerson(%d,%s, @iDel)", $prepare_vals));
+        $wpdb->query($wpdb->prepare("CALL deletePerson(%s, @iDel)", $prepare_vals));
         if ($wpdb->last_error){
             echo json_encode($wpdb->last_error);
             exit;
