@@ -3,8 +3,8 @@
 /*
 Plugin Name:     RRZE Hub
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-hub
-Description:     Basic template for all WordPress CMS plugins.
-Version:         0.3.2
+Description:     RRZE-Hub - one hub to rule them all.
+Version:         0.3.3
 Author:          RRZE Webteam
 Author URI:      https://blogs.fau.de/webworking/
 License:         GNU General Public License v2
