@@ -55,6 +55,9 @@ class UnivISAPI {
         $this->univisParam = urlencode($univisParam);
         $url = $this->getUrl($dataType) . $this->univisParam;
 
+        // echo $url;
+        // exit;
+
         if (!$url) {
             return 'Set UnivIS Org ID in settings.';
         }

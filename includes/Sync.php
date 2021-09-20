@@ -63,7 +63,7 @@ class Sync{
         ];
         $wpdb->query($wpdb->prepare("CALL setUnivis(%s, @retID)", $prepare_vals));
         if ($wpdb->last_error){
-            echo json_encode($wpdb->last_error);
+            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
             exit;
         }
         return $wpdb->get_var("SELECT @retID");
@@ -86,7 +86,7 @@ class Sync{
         // insert/update persons
         $wpdb->query($wpdb->prepare("CALL setPerson(%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
         if ($wpdb->last_error){
-            echo json_encode($wpdb->last_error);
+            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
             exit;
         }
 
@@ -125,7 +125,7 @@ class Sync{
             // insert/update organization
             $wpdb->query($wpdb->prepare("CALL setOrganization(%s,%s, @retID)", $prepare_vals));
             if ($wpdb->last_error){
-                echo json_encode($wpdb->last_error);
+                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                 exit;
             }
             $organizationID = $wpdb->get_var("SELECT @retID");
@@ -139,7 +139,7 @@ class Sync{
             // insert/update department
             $wpdb->query($wpdb->prepare("CALL setDepartment(%s,%d,%s, @retID)", $prepare_vals));
             if ($wpdb->last_error){
-                echo json_encode($wpdb->last_error);
+                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                 exit;
             }
             $departmentID = $wpdb->get_var("SELECT @retID");
@@ -153,7 +153,7 @@ class Sync{
             // insert/update personDepartment
             $wpdb->query($wpdb->prepare("CALL setPersonDepartment(%d,%d,%s)", $prepare_vals));
             if ($wpdb->last_error){
-                echo json_encode($wpdb->last_error);
+                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                 exit;
             }
 
@@ -175,7 +175,7 @@ class Sync{
                     // insert/update locations
                     $wpdb->query($wpdb->prepare("CALL setLocation(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
                     if ($wpdb->last_error){
-                        echo json_encode($wpdb->last_error);
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                         exit;
                     }
                     $locationID = $wpdb->get_var("SELECT @retID");
@@ -188,7 +188,7 @@ class Sync{
 
                     $wpdb->query($wpdb->prepare("CALL setPersonLocation(%d,%d)", $prepare_vals));
                     if ($wpdb->last_error){
-                        echo json_encode($wpdb->last_error);
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                         exit;
                     }
                 }
@@ -207,7 +207,7 @@ class Sync{
                     // insert/update officehours
                     $wpdb->query($wpdb->prepare("CALL setOfficehours(%s,%s,%s,%s,%s, @retID)", $prepare_vals));
                     if ($wpdb->last_error){
-                        echo json_encode($wpdb->last_error);
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                         exit;
                     }
                     $officehourID = $wpdb->get_var("SELECT @retID");
@@ -220,7 +220,7 @@ class Sync{
 
                     $wpdb->query($wpdb->prepare("CALL setPersonOfficehours(%d,%d)", $prepare_vals));
                     if ($wpdb->last_error){
-                        echo json_encode($wpdb->last_error);
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                         exit;
                     }
                 }
@@ -254,28 +254,29 @@ class Sync{
 
                     $wpdb->query($wpdb->prepare("CALL setPersonPosition(%d,%d,%d)", $prepare_vals));
                     if ($wpdb->last_error){
-                        echo json_encode($wpdb->last_error);
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                         exit;
                     }
                 }
             }
         }
 
-        // // delete unused persons
-        // $aUsedIDs = array_unique($aUsedIDs);
+        // delete unused persons
+        $aUsedIDs = array_unique($aUsedIDs);
 
-        // $prepare_vals = [
-        //     implode(',', $aUsedIDs)
-        // ];
+        $prepare_vals = [
+            $departmentID,
+            implode(',', $aUsedIDs)
+        ];
 
-        // $aCnt['sync'] = count($aUsedIDs);
+        $aCnt['sync'] = count($aUsedIDs);
 
-        // $wpdb->query($wpdb->prepare("CALL deletePerson(%s, @iDel)", $prepare_vals));
-        // if ($wpdb->last_error){
-        //     echo json_encode($wpdb->last_error);
-        //     exit;
-        // }
-        // $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
+        $wpdb->query($wpdb->prepare("CALL deletePerson(%d,%s, @iDel)", $prepare_vals));
+        if ($wpdb->last_error){
+            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+            exit;
+        }
+        $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
 
         return $aCnt;
     }
@@ -293,10 +294,18 @@ class Sync{
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
         $data = $univis->getData('lectureByDepartment');
 
+        // echo '<pre>';
+        // var_dump($data);
+        // exit;
+
         $aUsedIDs = [];
 
-        foreach ($data as $typ => $veranstaltungen){
-            foreach ($veranstaltungen as $aEntry){
+        foreach ($data as $aEntry){
+            // foreach ($veranstaltungen as $aEntry){
+
+
+
+
                 $lecID = 0;
                 $lang = 'de';
                 if (!empty($aEntry['leclanguage'])){
@@ -318,8 +327,8 @@ class Sync{
                     $uID,
                     $aEntry['name'],
                     empty($aEntry['ects_name'])?'':$aEntry['ects_name'],
-                    $typ,
                     $aEntry['lecture_type'],
+                    $aEntry['lecture_type_short'],
                     empty($aEntry['url_description'])?'':$aEntry['url_description'],
                     empty($aEntry['sws'])?0:(int) filter_var($aEntry['sws'], FILTER_SANITIZE_NUMBER_INT),
                     !empty($aEntry['beginners']),
@@ -338,7 +347,7 @@ class Sync{
                 $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
 
                 if ($wpdb->last_error){
-                    echo json_encode($wpdb->last_error);
+                    echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                     exit;
                 }
 
@@ -365,7 +374,7 @@ class Sync{
     
                         $wpdb->query($wpdb->prepare("CALL setPersonLecture(%d,%d)", $prepare_vals));
                         if ($wpdb->last_error){
-                            echo json_encode($wpdb->last_error);
+                            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                             exit;
                         }
                     }
@@ -388,7 +397,7 @@ class Sync{
                             // insert/update room
                             $wpdb->query($wpdb->prepare("CALL setRoom(%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
                             if ($wpdb->last_error){
-                                echo json_encode($wpdb->last_error);
+                                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                                 exit;
                             }
                             $roomID = $wpdb->get_var("SELECT @retID");
@@ -405,7 +414,7 @@ class Sync{
                             $wpdb->query($wpdb->prepare("CALL setCourse(%d,%d,%s,%s,%s,%s)", $prepare_vals));
 
                             if ($wpdb->last_error){
-                                echo json_encode($wpdb->last_error);
+                                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                                 exit;
                             }
                         }
@@ -413,7 +422,7 @@ class Sync{
                 }
 
             }
-        }
+        // }
 
         // delete unused lectures
         $prepare_vals = [
@@ -423,7 +432,7 @@ class Sync{
 
         $wpdb->query($wpdb->prepare("CALL deleteLecture(%d,%s, @iDel)", $prepare_vals));
         if ($wpdb->last_error){
-            echo json_encode($wpdb->last_error);
+            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
             exit;
         }
         $aCnt['del'] = $wpdb->get_var("SELECT @iDel");

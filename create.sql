@@ -23,11 +23,8 @@ CREATE TABLE rrze_hub_univis (
 
 CREATE TABLE rrze_hub_organization (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    -- univisID INT NOT NULL, 
     sUnivisID VARCHAR(255), 
-    sName VARCHAR(50) NOT NULL UNIQUE,
-    -- FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
-    --     ON DELETE CASCADE,
+    sName TEXT NOT NULL UNIQUE,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -35,12 +32,9 @@ CREATE TABLE rrze_hub_organization (
 
 CREATE TABLE rrze_hub_department (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    -- univisID INT NOT NULL, 
     sUnivisID VARCHAR(255), 
     organizationID INT NOT NULL, 
-    sName VARCHAR(50) NOT NULL UNIQUE,
-    -- FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
-    --     ON DELETE CASCADE,
+    sName TEXT NOT NULL UNIQUE,
     FOREIGN KEY (organizationID) REFERENCES rrze_hub_organization (ID) 
         ON DELETE CASCADE,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -59,7 +53,7 @@ CREATE TABLE rrze_hub_language (
 
 CREATE TABLE rrze_hub_lecturetype (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    sShort VARCHAR(2) NOT NULL UNIQUE,
+    sShort VARCHAR(10) NOT NULL UNIQUE,
     sLong VARCHAR(255) NOT NULL, 
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -67,7 +61,7 @@ CREATE TABLE rrze_hub_lecturetype (
 
 
 CREATE TABLE rrze_hub_lecture (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     univisID INT NOT NULL, 
     sKey VARCHAR(255) NOT NULL UNIQUE, 
     sLectureID VARCHAR(255), 
@@ -94,7 +88,7 @@ CREATE TABLE rrze_hub_lecture (
 
 
 CREATE TABLE rrze_hub_person (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     sKey VARCHAR(255) NOT NULL UNIQUE, 
     sPersonID VARCHAR(255), 
     sTitle VARCHAR(255), 
@@ -108,8 +102,8 @@ CREATE TABLE rrze_hub_person (
 
 
 CREATE TABLE rrze_hub_personDepartment (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    personID INT NOT NULL,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    personID BIGINT NOT NULL,
     departmentID INT NOT NULL,
     sWork TEXT NOT NULL,
     UNIQUE(personID, departmentID),
@@ -132,8 +126,8 @@ CREATE TABLE rrze_hub_position (
 
 
 CREATE TABLE rrze_hub_personPosition (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    personID INT NOT NULL,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    personID BIGINT NOT NULL,
     positionID INT NOT NULL,
     iOrder INT, 
     UNIQUE(personID, positionID, iOrder),
@@ -148,9 +142,9 @@ CREATE TABLE rrze_hub_personPosition (
 
 
 CREATE TABLE rrze_hub_personLecture (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    personID INT NOT NULL,
-    lectureID INT NOT NULL,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    personID BIGINT NOT NULL,
+    lectureID BIGINT NOT NULL,
     UNIQUE(personID, lectureID),
     FOREIGN KEY (personID) REFERENCES rrze_hub_person (ID) 
         ON DELETE CASCADE,
@@ -178,8 +172,8 @@ CREATE TABLE rrze_hub_room (
 
 
 CREATE TABLE rrze_hub_course (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    lectureID INT NOT NULL,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    lectureID BIGINT NOT NULL,
     roomID INT NOT NULL,
     sRepeat VARCHAR(255),
     sExclude VARCHAR(255),
@@ -196,14 +190,14 @@ CREATE TABLE rrze_hub_course (
 
 
 CREATE TABLE rrze_hub_job (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
 CREATE TABLE rrze_hub_officehours (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     tStart TIME NOT NULL,
     tEnd TIME NOT NULL,
     sOffice VARCHAR(255),
@@ -216,9 +210,9 @@ CREATE TABLE rrze_hub_officehours (
 
 
 CREATE TABLE rrze_hub_personOfficehours (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    personID INT NOT NULL,
-    officehoursID INT NOT NULL,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    personID BIGINT NOT NULL,
+    officehoursID BIGINT NOT NULL,
     UNIQUE(personID, officehoursID),
     FOREIGN KEY (personID) REFERENCES rrze_hub_person (ID) 
         ON DELETE CASCADE,
@@ -243,7 +237,7 @@ CREATE TABLE rrze_hub_personOfficehours (
 
 
 CREATE TABLE rrze_hub_location (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     sOffice VARCHAR(50),
     sEmail VARCHAR(50),
     sTel VARCHAR(50),
@@ -263,9 +257,9 @@ CREATE TABLE rrze_hub_location (
 
 
 CREATE TABLE rrze_hub_personLocation (
-    ID INT AUTO_INCREMENT PRIMARY KEY,
-    personID INT NOT NULL,
-    locationID INT NOT NULL,
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    personID BIGINT NOT NULL,
+    locationID BIGINT NOT NULL,
     UNIQUE(personID, locationID),
     FOREIGN KEY (personID) REFERENCES rrze_hub_person (ID) 
         ON DELETE CASCADE,
@@ -311,12 +305,12 @@ CREATE OR REPLACE PROCEDURE setOfficehours (
     sOfficeIN VARCHAR(255),
     sRepeatIN VARCHAR(255),
     sCommentIN VARCHAR(255),
-    OUT retID INT
+    OUT retID BIGINT
 )
 COMMENT 'return: rrze_hub_officehours.ID - Add/Update officehours'
 BEGIN
     START TRANSACTION;
-    -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
+    -- all fields refer to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
     INSERT INTO rrze_hub_officehours (tStart, tEnd, sOffice, sRepeat, sComment) VALUES (tStartIN, tEndIN, sOfficeIN, sRepeatIN, sCommentIN)
     ON DUPLICATE KEY UPDATE tStart = tStartIN; 
     COMMIT;
@@ -328,8 +322,8 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setPersonOfficehours (
-    IN personIDIN INT,
-    IN officehoursIDIN INT
+    IN personIDIN BIGINT,
+    IN officehoursIDIN BIGINT
 )
 BEGIN
     START TRANSACTION;
@@ -351,7 +345,7 @@ CREATE OR REPLACE PROCEDURE setLocation (
     IN sUrlIN VARCHAR(50),
     IN sStreetIN VARCHAR(50),
     IN sCityIN VARCHAR(50),
-    OUT retID INT
+    OUT retID BIGINT
 )
 COMMENT 'return: rrze_hub_location.ID - Add/Update location'
 BEGIN
@@ -367,7 +361,6 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setOrganization (
-    -- IN univisIDIN INT,
     IN sUnivisIDIN VARCHAR(255), 
     IN sNameIN VARCHAR(255), 
     OUT retID INT
@@ -375,7 +368,7 @@ CREATE OR REPLACE PROCEDURE setOrganization (
 COMMENT 'return: rrze_hub_organization.ID - Add/Update organization'
 BEGIN
     START TRANSACTION;
-    -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
+    -- all fields refer to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
     INSERT INTO rrze_hub_organization (sUnivisID, sName) VALUES (sUnivisIDIN, sNameIN)
     ON DUPLICATE KEY UPDATE sName = sNameIN; 
     COMMIT;
@@ -387,7 +380,6 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setDepartment (
-    -- IN univisIDIN INT,
     IN sUnivisIDIN VARCHAR(255), 
     IN organizationIDIN INT,
     IN sNameIN VARCHAR(255), 
@@ -396,7 +388,7 @@ CREATE OR REPLACE PROCEDURE setDepartment (
 COMMENT 'return: rrze_hub_department.ID - Add/Update department'
 BEGIN
     START TRANSACTION;
-    -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
+    -- all fields refer to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
     INSERT INTO rrze_hub_department (sUnivisID, organizationID, sName) VALUES (sUnivisIDIN, organizationIDIN, sNameIN)
     ON DUPLICATE KEY UPDATE sName = sNameIN; 
     COMMIT;
@@ -408,7 +400,7 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setPersonDepartment (
-    IN personIDIN INT,
+    IN personIDIN BIGINT,
     IN departmentIDIN INT,
     IN sWorkIN VARCHAR(255)
 )
@@ -427,7 +419,7 @@ CREATE OR REPLACE PROCEDURE setPosition (
 COMMENT 'return: rrze_hub_position.ID - Add/Update positions'
 BEGIN
     START TRANSACTION;
-    -- all fields refere to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
+    -- all fields refer to unique key, but INSERT IGNORE is not recommended as it ignores ALL errors
     INSERT INTO rrze_hub_position (sName) VALUES (sNameIN)
     ON DUPLICATE KEY UPDATE sName = sNameIN; 
     COMMIT;
@@ -439,7 +431,7 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setPersonPosition (
-    IN personIDIN INT,
+    IN personIDIN BIGINT,
     IN positionIDIN INT,
     IN iOrderIN INT
 )
@@ -450,9 +442,10 @@ BEGIN
     COMMIT;
 END@@
 
+DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE setLectureType (
-    IN sShortIN VARCHAR(2), 
+    IN sShortIN VARCHAR(10), 
     IN sLongIN VARCHAR(255),
     OUT retID INT
 )
@@ -503,8 +496,8 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setPersonLocation (
-    IN personIDIN INT,
-    IN locationIDIN INT
+    IN personIDIN BIGINT,
+    IN locationIDIN BIGINT
 )
 BEGIN
     START TRANSACTION;
@@ -516,7 +509,7 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setCourse (
-    IN lectureIDIN INT, 
+    IN lectureIDIN BIGINT, 
     IN roomIDIN INT, 
     IN sRepeatIN VARCHAR(255),
     IN sExcludeIN VARCHAR(255),
@@ -574,7 +567,7 @@ CREATE OR REPLACE PROCEDURE setLecture (
     IN sSummaryIN TEXT,
     IN sKeyIN VARCHAR(255),
     IN sLectureIDIN VARCHAR(255), 
-    OUT retID INT
+    OUT retID BIGINT
 )
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
 BEGIN 
@@ -591,8 +584,8 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setPersonLecture (
-    IN lectureIDIN INT,
-    IN personIDIN INT
+    IN lectureIDIN BIGINT,
+    IN personIDIN BIGINT
 )
 BEGIN
     START TRANSACTION;
@@ -612,8 +605,8 @@ CREATE OR REPLACE PROCEDURE storeLecture (
     IN univisIDIN INT,
     IN sNameIN VARCHAR(255),
     IN sEctsnameIN VARCHAR(255),
+    IN lectureTypeShortIN VARCHAR(10), 
     IN lectureTypeIN VARCHAR(255), 
-    IN lectureTypeShortIN VARCHAR(2), 
     IN sUrlIN VARCHAR(255),
     IN iSwsIN INT(2),
     IN bBeginnersIN BOOLEAN,
@@ -626,7 +619,7 @@ CREATE OR REPLACE PROCEDURE storeLecture (
     IN sSummaryIN TEXT,
     IN sKeyIN VARCHAR(255),
     IN sLectureIDIN VARCHAR(255),
-    OUT retID INT
+    OUT retID BIGINT
 )
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
 BEGIN 
@@ -678,14 +671,17 @@ END@@
 
 DELIMITER @@
 
+
+-- 2DO: departmentID -> rrze_hub_personDepartment
 CREATE OR REPLACE PROCEDURE deletePerson (
+    IN departmentIDIN INT,
     IN sIDIN TEXT,
     OUT iDel INT
 )
 COMMENT 'deletes persons'
 BEGIN 
     IF sIDIN = '' THEN SET sIDIN = '0'; END IF;
-    SET @sql = CONCAT("DELETE FROM rrze_hub_person WHERE ID NOT IN (", sIDIN, ")");
+    SET @sql = CONCAT("DELETE p.* FROM rrze_hub_person p WHERE p.ID NOT IN (", sIDIN, ") AND p.ID IN (SELECT pd.personID FROM rrze_hub_department d, rrze_hub_personDepartment pd WHERE pd.departmentID = d.ID AND pd.departmentID = ", departmentIDIN, ")");
     PREPARE stmt FROM @sql;
     EXECUTE stmt;
     SELECT ROW_COUNT() INTO iDel;
