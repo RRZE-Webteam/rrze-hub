@@ -698,7 +698,7 @@ DELIMITER ;
 -- views
 
 
-CREATE OR REPLACE VIEW getPersons AS 
+CREATE OR REPLACE VIEW getPerson AS 
     SELECT 
         orga.org_univisID,
         orga.dep_univisID,
@@ -803,7 +803,7 @@ CREATE OR REPLACE VIEW getPersons AS
     ON p.ID = pos.personID;
 
 
-CREATE OR REPLACE VIEW getLectures AS 
+CREATE OR REPLACE VIEW getLecture AS 
     SELECT 
         u.sUnivisID AS univisID,
         lec.sLectureID AS lecture_id, 
