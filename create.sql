@@ -70,6 +70,9 @@ CREATE TABLE rrze_hub_lecture (
     languageID INT NOT NULL, 
     lecturetypeID INT NOT NULL,  
     sUrl VARCHAR(255) NOT NULL,
+    sComment TEXT,
+    sOrganizational TEXT,
+    iMaxturnout INT,
     sSummary TEXT NOT NULL,
     iSws INT(2) NOT NULL,
     bEcts BOOLEAN NOT NULL DEFAULT 0,
@@ -175,6 +178,7 @@ CREATE TABLE rrze_hub_course (
     ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     lectureID BIGINT NOT NULL,
     roomID INT NOT NULL,
+    sName TEXT,
     sRepeat VARCHAR(255),
     sExclude VARCHAR(255),
     tStart TIME NOT NULL,
@@ -511,6 +515,7 @@ END@@
 CREATE OR REPLACE PROCEDURE setCourse (
     IN lectureIDIN BIGINT, 
     IN roomIDIN INT, 
+    IN sNameIN TEXT,
     IN sRepeatIN VARCHAR(255),
     IN sExcludeIN VARCHAR(255),
     IN tStartIN TIME,
@@ -519,8 +524,8 @@ CREATE OR REPLACE PROCEDURE setCourse (
 COMMENT 'Add/Update course'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_course (lectureID, roomID, sRepeat, sExclude, tStart, tEnd) VALUES (lectureIDIN, roomIDIN, sRepeatIN, sExcludeIN, tStartIN, tEndIN)
-    ON DUPLICATE KEY UPDATE roomID = roomIDIN, sRepeat = sRepeatIN, sExclude = sExcludeIN, tStart = tStartIN, tEnd = tEndIN;
+    INSERT INTO rrze_hub_course (lectureID, roomID, sName, sRepeat, sExclude, tStart, tEnd) VALUES (lectureIDIN, roomIDIN, sNameIN, sRepeatIN, sExcludeIN, tStartIN, tEndIN)
+    ON DUPLICATE KEY UPDATE roomID = roomIDIN, sRepeat = sRepeatIN, sName = sNameIN, sExclude = sExcludeIN, tStart = tStartIN, tEnd = tEndIN;
     COMMIT;
 END@@
 
@@ -550,6 +555,8 @@ BEGIN
 END@@
 
 
+DELIMITER @@
+
 CREATE OR REPLACE PROCEDURE setLecture (
     IN univisIDIN INT, 
     IN sNameIN VARCHAR(255),
@@ -557,6 +564,9 @@ CREATE OR REPLACE PROCEDURE setLecture (
     IN lecturetypeIDIN INT, 
     IN languageIDIN INT, 
     IN sUrlIN VARCHAR(255),
+    IN sCommentIN TEXT,
+    IN sOrganizationalIN TEXT,
+    IN iMaxturnoutIN INT,
     IN iSwsIN INT(2),
     IN bBeginnersIN BOOLEAN,
     IN bEarlystudyIN BOOLEAN,
@@ -572,11 +582,11 @@ CREATE OR REPLACE PROCEDURE setLecture (
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
 BEGIN 
     START TRANSACTION;
-    INSERT INTO rrze_hub_lecture (univisID, sName, sEctsname, sUrl, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bEcts, sEctscredits, sSummary, sKey, sLectureID, lecturetypeID, languageID) VALUES (univisIDIN, sNameIN, sEctsnameIN, sUrlIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, lecturetypeIDIN, languageIDIN)
+    INSERT INTO rrze_hub_lecture (univisID, sName, sEctsname, sUrl, sComment, sOrganizational, iMaxturnout, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bEcts, sEctscredits, sSummary, sKey, sLectureID, lecturetypeID, languageID) VALUES (univisIDIN, sNameIN, sEctsnameIN, sUrlIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, lecturetypeIDIN, languageIDIN)
     ON DUPLICATE KEY 
-    UPDATE univisID = univisIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN;
+    UPDATE univisID = univisIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, sComment = sCommentIN, sOrganizational = sOrganizationalIN, iMaxturnout = iMaxturnoutIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN;
+    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND sComment = sCommentIN AND sOrganizational = sOrganizationalIN AND iMaxturnout = iMaxturnoutIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -608,6 +618,9 @@ CREATE OR REPLACE PROCEDURE storeLecture (
     IN lectureTypeShortIN VARCHAR(10), 
     IN lectureTypeIN VARCHAR(255), 
     IN sUrlIN VARCHAR(255),
+    IN sCommentIN TEXT,
+    IN sOrganizationalIN TEXT,
+    IN iMaxturnoutIN INT,
     IN iSwsIN INT(2),
     IN bBeginnersIN BOOLEAN,
     IN bEarlystudyIN BOOLEAN,
@@ -633,7 +646,7 @@ BEGIN
     SELECT ID INTO lID FROM rrze_hub_language WHERE sShort = sLanguageIN;
 
     -- store lecture
-    CALL setLecture(univisIDIN, sNameIN, sEctsnameIN, ltID, lID, sUrlIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, @retID);
+    CALL setLecture(univisIDIN, sNameIN, sEctsnameIN, ltID, lID, sUrlIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, @retID);
     SET retID = @retID;
 END@@
 
@@ -803,6 +816,8 @@ CREATE OR REPLACE VIEW getPerson AS
     ON p.ID = pos.personID;
 
 
+
+
 CREATE OR REPLACE VIEW getLecture AS 
     SELECT 
         u.sUnivisID AS univisID,
@@ -811,8 +826,12 @@ CREATE OR REPLACE VIEW getLecture AS
         lec.sEctsname AS ects_name,
         lang.sShort AS leclanguage,
         lec.sKey AS 'key',
+        lectype.sShort AS lecture_type_short,
         lectype.sLong AS lecture_type,
         lec.sUrl AS url_description,
+        lec.sComment AS comment,
+        lec.sOrganizational AS organizational,
+        lec.iMaxturnout AS maxturnout,
         lec.sSummary AS summary,
         IF(lec.iSws, CONCAT(lec.iSws, " SWS"), NULL) AS sws,
         IF(lec.bEcts, "ECTS-Studium", NULL) AS ects,
@@ -821,11 +840,13 @@ CREATE OR REPLACE VIEW getLecture AS
         IF(lec.bEarlystudy, "Frühstudium", NULL) AS fruehstud,
         IF(lec.bGuest, "Für Gasthörer zugelassen", NULL) AS gast,
         IF(lec.bEvaluation, "Evaluation", NULL) AS evaluation,
-        co.tStart AS starttime,
-        co.tEnd AS endtime,
+        co.ID AS courseID,
+        co.sName AS coursename,
+        DATE_FORMAT(co.tStart, "%H:%i") AS starttime,
+        DATE_FORMAT(co.tStart, "%H:%i") AS endtime,
         co.sRepeat AS 'repeat',
         co.sExclude AS exclude,
-        co.sShort AS short,
+        co.sShort AS room,
         co.sNorth AS north,
         co.sEast AS east,
         p.title,
@@ -839,6 +860,8 @@ CREATE OR REPLACE VIEW getLecture AS
         rrze_hub_lecture lec
     LEFT JOIN 
         (SELECT 
+            c.ID,
+            c.sName,
             c.lectureID,
             c.tStart,
             c.tEnd,
@@ -859,7 +882,7 @@ CREATE OR REPLACE VIEW getLecture AS
             gp.*,
             pl.lectureID
         FROM
-            getPersons gp,
+            getPerson gp,
             rrze_hub_personLecture pl
         WHERE 
             gp.ID = pl.personID    

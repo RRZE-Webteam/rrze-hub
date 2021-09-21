@@ -298,131 +298,130 @@ class Sync{
         // var_dump($data);
         // exit;
 
+
+
         $aUsedIDs = [];
 
         foreach ($data as $aEntry){
-            // foreach ($veranstaltungen as $aEntry){
-
-
-
-
-                $lecID = 0;
-                $lang = 'de';
-                if (!empty($aEntry['leclanguage'])){
-                    switch ($aEntry['leclanguage']){
-                        case 'E' : $lang = 'en';
+            $lecID = 0;
+            $lang = 'de';
+            if (!empty($aEntry['leclanguage'])){
+                switch ($aEntry['leclanguage']){
+                    case 'E' : $lang = 'en';
+                    break;
+                    case 'F' : $lang = 'fr';
                         break;
-                        case 'F' : $lang = 'fr';
-                            break;
-                        case 'S' : $lang = 'es';
-                            break;
-                        case 'R' : $lang = 'ru';
-                            break;
-                        case 'C' : $lang = 'zh';
-                            break;
+                    case 'S' : $lang = 'es';
+                        break;
+                    case 'R' : $lang = 'ru';
+                        break;
+                    case 'C' : $lang = 'zh';
+                        break;
+                }
+            }
+            
+            $prepare_vals = [
+                $uID,
+                $aEntry['name'],
+                empty($aEntry['ects_name'])?'':$aEntry['ects_name'],
+                $aEntry['lecture_type'],
+                $aEntry['lecture_type_short'],
+                empty($aEntry['url_description'])?'':$aEntry['url_description'],
+                empty($aEntry['comment'])?'':$aEntry['comment'],
+                empty($aEntry['organizational'])?'':$aEntry['organizational'],
+                empty($aEntry['maxturnout'])?0:(int) filter_var($aEntry['maxturnout'], FILTER_SANITIZE_NUMBER_INT),
+                empty($aEntry['sws'])?0:(int) filter_var($aEntry['sws'], FILTER_SANITIZE_NUMBER_INT),
+                !empty($aEntry['beginners']),
+                !empty($aEntry['fruehstud']),
+                !empty($aEntry['gast']),
+                !empty($aEntry['evaluation']),
+                !empty($aEntry['ects']),
+                empty($aEntry['ects_cred'])?'':$aEntry['ects_cred'],
+                $lang,
+                empty($aEntry['summary'])?'':$aEntry['summary'],
+                empty($aEntry['key'])?'':$aEntry['key'],
+                empty($aEntry['lecture_id'])?'':$aEntry['lecture_id']
+            ];
+
+            // insert/update lectures
+            $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+
+            if ($wpdb->last_error){
+                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                exit;
+            }
+
+            $lectureID = $wpdb->get_var("SELECT @retID");
+            $aCnt['sync']++;
+
+
+            if (empty($lectureID)){
+                echo 'empty!' . $aEntry['name'] . ' ' . $aEntry['key'];
+                exit;
+            }
+
+            $aUsedIDs[] = $lectureID;
+
+            if (!empty($aEntry['lecturers'])){
+                foreach($aEntry['lecturers'] as $person){
+                    $personID = $this->storePerson($person);
+
+                    // insert/update personLecture
+                    $prepare_vals = [
+                        $lectureID,
+                        $personID
+                    ];
+
+                    $wpdb->query($wpdb->prepare("CALL setPersonLecture(%d,%d)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                        exit;
                     }
                 }
-                
-                $prepare_vals = [
-                    $uID,
-                    $aEntry['name'],
-                    empty($aEntry['ects_name'])?'':$aEntry['ects_name'],
-                    $aEntry['lecture_type'],
-                    $aEntry['lecture_type_short'],
-                    empty($aEntry['url_description'])?'':$aEntry['url_description'],
-                    empty($aEntry['sws'])?0:(int) filter_var($aEntry['sws'], FILTER_SANITIZE_NUMBER_INT),
-                    !empty($aEntry['beginners']),
-                    !empty($aEntry['fruehstud']),
-                    !empty($aEntry['gast']),
-                    !empty($aEntry['evaluation']),
-                    !empty($aEntry['ects']),
-                    empty($aEntry['ects_cred'])?'':$aEntry['ects_cred'],
-                    $lang,
-                    empty($aEntry['summary'])?'':$aEntry['summary'],
-                    empty($aEntry['key'])?'':$aEntry['key'],
-                    empty($aEntry['lecture_id'])?'':$aEntry['lecture_id']
-                ];
+            }
 
-                // insert/update lectures
-                $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+            if (!empty($lectureID) && !empty($aEntry['courses'])){
+                foreach($aEntry['courses'] as $course){
+                    foreach ($course['term'] as $term){
+                        $prepare_vals = [
+                            empty($term['room']['key'])?'':$term['room']['key'],
+                            empty($term['room']['name'])?'':$term['room']['name'],
+                            empty($term['room']['short'])?'':$term['room']['short'],
+                            empty($term['room']['roomno'])?'':$term['room']['roomno'],
+                            empty($term['room']['buildno'])?'':$term['room']['buildno'],
+                            empty($term['room']['address'])?'':$term['room']['address'],
+                            empty($term['room']['description'])?'':$term['room']['description'],
+                            empty($term['room']['north'])?'':$term['room']['north'],
+                            empty($term['room']['east'])?'':$term['room']['east']
+                        ];
+                        // insert/update room
+                        $wpdb->query($wpdb->prepare("CALL setRoom(%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+                        if ($wpdb->last_error){
+                            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                            exit;
+                        }
+                        $roomID = $wpdb->get_var("SELECT @retID");
 
-                if ($wpdb->last_error){
-                    echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
-                    exit;
-                }
-
-                $lectureID = $wpdb->get_var("SELECT @retID");
-                $aCnt['sync']++;
-
-
-                if (empty($lectureID)){
-                    echo 'empty!' . $aEntry['name'] . ' ' . $aEntry['key'];
-                    exit;
-                }
-
-                $aUsedIDs[] = $lectureID;
-
-                if (!empty($aEntry['lecturers'])){
-                    foreach($aEntry['lecturers'] as $person){
-                        $personID = $this->storePerson($uID, $person);
-    
-                        // insert/update personLecture
                         $prepare_vals = [
                             $lectureID,
-                            $personID
+                            $roomID,
+                            empty($term['coursename'])?'':trim($term['coursename']),
+                            empty($term['repeat'])?'':trim($term['repeat']),
+                            empty($term['exclude'])?'':$term['exclude'],
+                            empty($term['starttime'])?'':$term['starttime'],
+                            empty($term['endtime'])?'':$term['endtime']
                         ];
-    
-                        $wpdb->query($wpdb->prepare("CALL setPersonLecture(%d,%d)", $prepare_vals));
+                        // insert/update courses
+                        $wpdb->query($wpdb->prepare("CALL setCourse(%d,%d,%s,%s,%s,%s,%s)", $prepare_vals));
+
                         if ($wpdb->last_error){
                             echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                             exit;
                         }
                     }
                 }
-
-                if (!empty($lectureID) && !empty($aEntry['courses'])){
-                    foreach($aEntry['courses'] as $course){
-                        foreach ($course['term'] as $term){
-                            $prepare_vals = [
-                                empty($term['room']['key'])?'':$term['room']['key'],
-                                empty($term['room']['name'])?'':$term['room']['name'],
-                                empty($term['room']['short'])?'':$term['room']['short'],
-                                empty($term['room']['roomno'])?'':$term['room']['roomno'],
-                                empty($term['room']['buildno'])?'':$term['room']['buildno'],
-                                empty($term['room']['address'])?'':$term['room']['address'],
-                                empty($term['room']['description'])?'':$term['room']['description'],
-                                empty($term['room']['north'])?'':$term['room']['north'],
-                                empty($term['room']['east'])?'':$term['room']['east']
-                            ];
-                            // insert/update room
-                            $wpdb->query($wpdb->prepare("CALL setRoom(%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
-                            if ($wpdb->last_error){
-                                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
-                                exit;
-                            }
-                            $roomID = $wpdb->get_var("SELECT @retID");
-
-                            $prepare_vals = [
-                                $lectureID,
-                                $roomID,
-                                empty($term['repeat'])?'':trim($term['repeat']),
-                                empty($term['exclude'])?'':$term['exclude'],
-                                empty($term['starttime'])?'':$term['starttime'],
-                                empty($term['endtime'])?'':$term['endtime']
-                            ];
-                            // insert/update courses
-                            $wpdb->query($wpdb->prepare("CALL setCourse(%d,%d,%s,%s,%s,%s)", $prepare_vals));
-
-                            if ($wpdb->last_error){
-                                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
-                                exit;
-                            }
-                        }
-                    }
-                }
-
             }
-        // }
+        }
 
         // delete unused lectures
         $prepare_vals = [
