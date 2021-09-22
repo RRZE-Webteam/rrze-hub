@@ -207,6 +207,10 @@ class UnivISAPI {
                     'fields' => [
                         'lecture_id' => 'id',
                         'name' => 'name',
+                        'startdate' => 'startdate',
+                        'enddate' => 'enddate',
+                        'starttime' => 'starttime',
+                        'endtime' => 'endtime',
                         'ects_name' => 'ects_name',
                         'comment' => 'comment',
                         'leclanguage' => 'leclanguage',
@@ -453,7 +457,7 @@ class UnivISAPI {
                                 if ($person['key'] == 'Person.' . $doz_key){
                                     // unset($person['key']);
                                     $ret[$e_nr]['lecturers'][] = $person;
-                                    unset($person[$p_nr]);
+                                    // unset($person[$p_nr]);
                                 }
                             }
                         }
@@ -468,6 +472,18 @@ class UnivISAPI {
                 foreach($ret as $nr => $entry){
                     if (isset($entry['courses'])){
                         foreach($entry['courses'] as $c_nr => $course){
+                            // add person details to courses
+                            if (isset($course['doz'])){
+                                foreach($course['doz'] as $doz_key){
+                                    foreach($persons as $p_nr => $person){
+                                        if ($person['key'] == 'Person.' . $doz_key){
+                                            $ret[$nr]['courses'][$c_nr]['lecturers'][] = $person;
+                                        }
+                                    }
+                                }
+                                unset($ret[$nr]['courses'][$c_nr]['doz']);
+                            }
+                            // add room to terms of course
                             foreach($course['term'] as $t_nr => $term){
                                 foreach($rooms as $room){
                                     if (isset($term['room']) && $term['room'] == $room['key']){

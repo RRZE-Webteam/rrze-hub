@@ -69,6 +69,10 @@ CREATE TABLE rrze_hub_lecture (
     sEctsname VARCHAR(255), 
     languageID INT NOT NULL, 
     lecturetypeID INT NOT NULL,  
+    tStartdate DATE,
+    tEnddate DATE,
+    tStarttime TIME,
+    tEndtime TIME,
     sUrl VARCHAR(255) NOT NULL,
     sComment TEXT,
     sOrganizational TEXT,
@@ -177,14 +181,41 @@ CREATE TABLE rrze_hub_room (
 CREATE TABLE rrze_hub_course (
     ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     lectureID BIGINT NOT NULL,
-    roomID INT NOT NULL,
     sName TEXT,
+    FOREIGN KEY (lectureID) REFERENCES rrze_hub_lecture (ID) 
+        ON DELETE CASCADE,
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE rrze_hub_personCourse (
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    personID BIGINT NOT NULL,
+    courseID BIGINT NOT NULL,
+    UNIQUE(personID, courseID),
+    FOREIGN KEY (personID) REFERENCES rrze_hub_person (ID) 
+        ON DELETE CASCADE,
+    FOREIGN KEY (courseID) REFERENCES rrze_hub_course (ID) 
+        ON DELETE CASCADE,
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+
+CREATE TABLE rrze_hub_term (
+    ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+    courseID BIGINT NOT NULL,
+    roomID INT NOT NULL,
     sRepeat VARCHAR(255),
     sExclude VARCHAR(255),
-    tStart TIME NOT NULL,
-    tEnd TIME NOT NULL,
-    UNIQUE(lectureID, roomID, tStart, tEnd, sRepeat, sExclude),
-    FOREIGN KEY (lectureID) REFERENCES rrze_hub_lecture (ID) 
+    tStartdate DATE,
+    tEnddate DATE,
+    tStarttime TIME,
+    tEndtime TIME,
+    UNIQUE(courseID, roomID),
+    FOREIGN KEY (courseID) REFERENCES rrze_hub_course (ID) 
         ON DELETE CASCADE,
     FOREIGN KEY (roomID) REFERENCES rrze_hub_room (ID) 
         ON DELETE CASCADE,
@@ -514,18 +545,51 @@ END@@
 
 CREATE OR REPLACE PROCEDURE setCourse (
     IN lectureIDIN BIGINT, 
-    IN roomIDIN INT, 
     IN sNameIN TEXT,
-    IN sRepeatIN VARCHAR(255),
-    IN sExcludeIN VARCHAR(255),
-    IN tStartIN TIME,
-    IN tEndIN TIME
+    OUT retID INT
 )
-COMMENT 'Add/Update course'
+COMMENT 'return: rrze_hub_course.ID - Add/Update course'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_course (lectureID, roomID, sName, sRepeat, sExclude, tStart, tEnd) VALUES (lectureIDIN, roomIDIN, sNameIN, sRepeatIN, sExcludeIN, tStartIN, tEndIN)
-    ON DUPLICATE KEY UPDATE roomID = roomIDIN, sRepeat = sRepeatIN, sName = sNameIN, sExclude = sExcludeIN, tStart = tStartIN, tEnd = tEndIN;
+    INSERT INTO rrze_hub_course (lectureID, sName) VALUES (lectureIDIN, sNameIN)
+    ON DUPLICATE KEY UPDATE sName = sNameIN;
+    COMMIT;
+    SELECT ID INTO retID FROM rrze_hub_course WHERE lectureID = lectureIDIN AND sName = sNameIN;
+    IF retID <= 0 THEN
+        ROLLBACK;
+    END IF; 
+END@@
+
+
+CREATE OR REPLACE PROCEDURE setPersonCourse (
+    IN personIDIN BIGINT,
+    IN courseIDIN BIGINT
+)
+BEGIN
+    START TRANSACTION;
+    INSERT INTO rrze_hub_personCourse (personID, courseID) VALUES (personIDIN, courseIDIN)
+    ON DUPLICATE KEY UPDATE personID = personIDIN, courseID = courseIDIN;
+    COMMIT;
+    -- 2DO: bulk insert
+END@@
+
+
+
+CREATE OR REPLACE PROCEDURE setTerm (
+    IN courseIDIN BIGINT,
+    IN roomIDIN INT,
+    IN sRepeatIN VARCHAR(255),
+    IN sExcludeIN VARCHAR(255),
+    IN tStartdateIN DATE,
+    IN tEnddateIN DATE,
+    IN tStarttimeIN TIME,
+    IN tEndtimeIN TIME
+)
+COMMENT 'Add/Update term'
+BEGIN
+    START TRANSACTION;
+    INSERT INTO rrze_hub_term (courseID, roomID, sRepeat, sExclude, tStartdate, tEnddate, tStarttime, tEndtime) VALUES (courseIDIN, roomIDIN, sRepeatIN, sExcludeIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN)
+    ON DUPLICATE KEY UPDATE sRepeat = sRepeatIN, sExclude = sExcludeIN, tStartdate = tStartdateIN, tEnddate = tEnddateIN, tStarttime = tStarttimeIN, tEndtime = tEndtimeIN;
     COMMIT;
 END@@
 
@@ -555,6 +619,7 @@ BEGIN
 END@@
 
 
+
 DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE setLecture (
@@ -564,6 +629,10 @@ CREATE OR REPLACE PROCEDURE setLecture (
     IN lecturetypeIDIN INT, 
     IN languageIDIN INT, 
     IN sUrlIN VARCHAR(255),
+    IN tStartdateIN DATE,
+    IN tEnddateIN DATE,
+    IN tStarttimeIN TIME,
+    IN tEndtimeIN TIME,
     IN sCommentIN TEXT,
     IN sOrganizationalIN TEXT,
     IN iMaxturnoutIN INT,
@@ -582,11 +651,11 @@ CREATE OR REPLACE PROCEDURE setLecture (
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
 BEGIN 
     START TRANSACTION;
-    INSERT INTO rrze_hub_lecture (univisID, sName, sEctsname, sUrl, sComment, sOrganizational, iMaxturnout, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bEcts, sEctscredits, sSummary, sKey, sLectureID, lecturetypeID, languageID) VALUES (univisIDIN, sNameIN, sEctsnameIN, sUrlIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, lecturetypeIDIN, languageIDIN)
+    INSERT INTO rrze_hub_lecture (univisID, sName, sEctsname, sUrl, tStartdate, tEnddate, tStarttime, tEndtime, sComment, sOrganizational, iMaxturnout, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bEcts, sEctscredits, sSummary, sKey, sLectureID, lecturetypeID, languageID) VALUES (univisIDIN, sNameIN, sEctsnameIN, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, lecturetypeIDIN, languageIDIN)
     ON DUPLICATE KEY 
-    UPDATE univisID = univisIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, sComment = sCommentIN, sOrganizational = sOrganizationalIN, iMaxturnout = iMaxturnoutIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN;
+    UPDATE univisID = univisIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, tStartdate = tStartdateIN, tEnddate = tEnddateIN, tStarttime = tStarttimeIN, tEndtime = tEndtimeIN, sComment = sCommentIN, sOrganizational = sOrganizationalIN, iMaxturnout = iMaxturnoutIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND sComment = sCommentIN AND sOrganizational = sOrganizationalIN AND iMaxturnout = iMaxturnoutIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN;
+    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND tStartdate = tStartdateIN AND tEnddate = tEnddateIN AND tStarttime = tStarttimeIN AND tEndtime = tEndtimeIN AND sComment = sCommentIN AND sOrganizational = sOrganizationalIN AND iMaxturnout = iMaxturnoutIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -618,6 +687,10 @@ CREATE OR REPLACE PROCEDURE storeLecture (
     IN lectureTypeShortIN VARCHAR(10), 
     IN lectureTypeIN VARCHAR(255), 
     IN sUrlIN VARCHAR(255),
+    IN tStartdateIN DATE,
+    IN tEnddateIN DATE,
+    IN tStarttimeIN TIME,
+    IN tEndtimeIN TIME,
     IN sCommentIN TEXT,
     IN sOrganizationalIN TEXT,
     IN iMaxturnoutIN INT,
@@ -646,7 +719,7 @@ BEGIN
     SELECT ID INTO lID FROM rrze_hub_language WHERE sShort = sLanguageIN;
 
     -- store lecture
-    CALL setLecture(univisIDIN, sNameIN, sEctsnameIN, ltID, lID, sUrlIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, @retID);
+    CALL setLecture(univisIDIN, sNameIN, sEctsnameIN, ltID, lID, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, @retID);
     SET retID = @retID;
 END@@
 
@@ -833,6 +906,10 @@ CREATE OR REPLACE VIEW getLecture AS
         lec.sOrganizational AS organizational,
         lec.iMaxturnout AS maxturnout,
         lec.sSummary AS summary,
+        lec.tStartdate AS lecture_startdate,
+        lec.tEnddate AS lecture_enddate,
+        DATE_FORMAT(lec.tStarttime, "%H:%i") AS lecture_starttime,
+        DATE_FORMAT(lec.tEndtime, "%H:%i") AS lecture_endtime,
         IF(lec.iSws, CONCAT(lec.iSws, " SWS"), NULL) AS sws,
         IF(lec.bEcts, "ECTS-Studium", NULL) AS ects,
         lec.sEctscredits AS ects_cred,
@@ -840,46 +917,77 @@ CREATE OR REPLACE VIEW getLecture AS
         IF(lec.bEarlystudy, "Frühstudium", NULL) AS fruehstud,
         IF(lec.bGuest, "Für Gasthörer zugelassen", NULL) AS gast,
         IF(lec.bEvaluation, "Evaluation", NULL) AS evaluation,
-        co.ID AS courseID,
+        co.courseID AS courseID,
         co.sName AS coursename,
-        DATE_FORMAT(co.tStart, "%H:%i") AS starttime,
-        DATE_FORMAT(co.tStart, "%H:%i") AS endtime,
         co.sRepeat AS 'repeat',
         co.sExclude AS exclude,
         co.sShort AS room,
         co.sNorth AS north,
         co.sEast AS east,
-        p.title,
-        p.firstname,
-        p.lastname,
-        p.person_id 
+        co.title AS course_person_title,
+        co.firstname AS course_person_firstname,
+        co.lastname AS course_person_lastname,
+        co.ID AS course_person_id,
+        co.tStartdate AS term_startdate,
+        co.tEnddate AS term_enddate,
+        DATE_FORMAT(co.tStarttime, "%H:%i") AS term_starttime,
+        DATE_FORMAT(co.tEndtime, "%H:%i") AS term_endtime,
+        p.title AS lecture_person_title,
+        p.firstname AS lecture_person_firstname,
+        p.lastname AS lecture_person_lastname,
+        p.ID AS lecture_person_id
     FROM 
         rrze_hub_univis u,
         rrze_hub_lecturetype lectype,
         rrze_hub_language lang,
         rrze_hub_lecture lec
     LEFT JOIN 
-        (SELECT 
-            c.ID,
+        (SELECT
+            c.ID AS courseID, 
             c.sName,
             c.lectureID,
-            c.tStart,
-            c.tEnd,
-            c.sRepeat,
-            c.sExclude,
+            t.tStartdate,
+            t.tEnddate,
+            t.tStarttime,
+            t.tEndtime,
+            t.sRepeat,
+            t.sExclude,
             r.sShort,
             r.sNorth,
-            r.sEast
+            r.sEast,
+            tp.title,
+            tp.firstname,
+            tp.lastname,
+            tp.ID
         FROM 
-            rrze_hub_course c,
-            rrze_hub_room r 
+            rrze_hub_room r,
+            rrze_hub_term t,
+            rrze_hub_course c
+        LEFT JOIN 
+            (SELECT 
+                gp.title,
+                gp.firstname,
+                gp.lastname,
+                gp.ID,
+                pc.courseID
+            FROM
+                getPerson gp,
+                rrze_hub_personCourse pc
+            WHERE 
+                gp.ID = pc.personID    
+            ) tp
+        ON c.ID = tp.courseID
         WHERE
-            c.roomID = r.ID
+            c.ID = t.courseID AND 
+            t.roomID = r.ID
         ) co
     ON lec.ID = co.lectureID
     LEFT JOIN 
         (SELECT 
-            gp.*,
+            gp.title,
+            gp.firstname,
+            gp.lastname,
+            gp.ID,
             pl.lectureID
         FROM
             getPerson gp,

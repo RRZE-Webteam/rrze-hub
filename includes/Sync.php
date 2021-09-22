@@ -298,8 +298,6 @@ class Sync{
         // var_dump($data);
         // exit;
 
-
-
         $aUsedIDs = [];
 
         foreach ($data as $aEntry){
@@ -327,6 +325,10 @@ class Sync{
                 $aEntry['lecture_type'],
                 $aEntry['lecture_type_short'],
                 empty($aEntry['url_description'])?'':$aEntry['url_description'],
+                empty($aEntry['startdate'])?'':$aEntry['startdate'],
+                empty($aEntry['enddate'])?'':$aEntry['enddate'],
+                empty($aEntry['starttime'])?'':$aEntry['starttime'],
+                empty($aEntry['endtime'])?'':$aEntry['endtime'],
                 empty($aEntry['comment'])?'':$aEntry['comment'],
                 empty($aEntry['organizational'])?'':$aEntry['organizational'],
                 empty($aEntry['maxturnout'])?0:(int) filter_var($aEntry['maxturnout'], FILTER_SANITIZE_NUMBER_INT),
@@ -344,7 +346,7 @@ class Sync{
             ];
 
             // insert/update lectures
-            $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+            $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
 
             if ($wpdb->last_error){
                 echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
@@ -382,6 +384,41 @@ class Sync{
 
             if (!empty($lectureID) && !empty($aEntry['courses'])){
                 foreach($aEntry['courses'] as $course){
+                    $prepare_vals = [
+                        $lectureID,
+                        empty($course['coursename'])?'':$course['coursename']
+                    ];
+        
+                    // insert/update course
+                    $wpdb->query($wpdb->prepare("CALL setCourse(%d,%s, @retID)", $prepare_vals));
+        
+                    if ($wpdb->last_error){
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                        exit;
+                    }
+        
+                    $courseID = $wpdb->get_var("SELECT @retID");
+
+                    if (!empty($course['lecturers'])){
+                        foreach($course['lecturers'] as $person){
+                            $personID = $this->storePerson($person);
+        
+                            // insert/update personCourse
+                            $prepare_vals = [
+                                $courseID,
+                                $personID
+                            ];
+        
+                            $wpdb->query($wpdb->prepare("CALL setPersonCourse(%d,%d)", $prepare_vals));
+                            if ($wpdb->last_error){
+                                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                                exit;
+                            }
+                        }
+                    }
+        
+
+
                     foreach ($course['term'] as $term){
                         $prepare_vals = [
                             empty($term['room']['key'])?'':$term['room']['key'],
@@ -403,16 +440,17 @@ class Sync{
                         $roomID = $wpdb->get_var("SELECT @retID");
 
                         $prepare_vals = [
-                            $lectureID,
+                            $courseID,
                             $roomID,
-                            empty($term['coursename'])?'':trim($term['coursename']),
                             empty($term['repeat'])?'':trim($term['repeat']),
                             empty($term['exclude'])?'':$term['exclude'],
+                            empty($term['startdate'])?'':$term['startdate'],
+                            empty($term['enddate'])?'':$term['enddate'],
                             empty($term['starttime'])?'':$term['starttime'],
                             empty($term['endtime'])?'':$term['endtime']
                         ];
-                        // insert/update courses
-                        $wpdb->query($wpdb->prepare("CALL setCourse(%d,%d,%s,%s,%s,%s,%s)", $prepare_vals));
+                        // insert/update terms
+                        $wpdb->query($wpdb->prepare("CALL setTerm(%d,%d,%s,%s,%s,%s,%s,%s)", $prepare_vals));
 
                         if ($wpdb->last_error){
                             echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
@@ -423,18 +461,18 @@ class Sync{
             }
         }
 
-        // delete unused lectures
-        $prepare_vals = [
-            $uID,
-            implode(',', $aUsedIDs)
-        ];
+        // // delete unused lectures
+        // $prepare_vals = [
+        //     $uID,
+        //     implode(',', $aUsedIDs)
+        // ];
 
-        $wpdb->query($wpdb->prepare("CALL deleteLecture(%d,%s, @iDel)", $prepare_vals));
-        if ($wpdb->last_error){
-            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
-            exit;
-        }
-        $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
+        // $wpdb->query($wpdb->prepare("CALL deleteLecture(%d,%s, @iDel)", $prepare_vals));
+        // if ($wpdb->last_error){
+        //     echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+        //     exit;
+        // }
+        // $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
 
         return $aCnt;
     }
