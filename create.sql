@@ -227,6 +227,21 @@ CREATE TABLE rrze_hub_term (
 );
 
 
+CREATE TABLE rrze_hub_stud (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    lectureID BIGINT NOT NULL,
+    sRicht VARCHAR(255), 
+    sPflicht VARCHAR(255), 
+    iSem INT, 
+    sCredits VARCHAR(255),
+    UNIQUE(lectureID, sRicht, sPflicht, iSem, sCredits),
+    FOREIGN KEY (lectureID) REFERENCES rrze_hub_lecture (ID) 
+        ON DELETE CASCADE,
+    tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
 CREATE TABLE rrze_hub_job (
     ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -578,7 +593,6 @@ BEGIN
 END@@
 
 
-
 CREATE OR REPLACE PROCEDURE setTerm (
     IN courseIDIN BIGINT,
     IN roomIDIN INT,
@@ -594,6 +608,22 @@ BEGIN
     START TRANSACTION;
     INSERT INTO rrze_hub_term (courseID, roomID, sRepeat, sExclude, tStartdate, tEnddate, tStarttime, tEndtime) VALUES (courseIDIN, roomIDIN, sRepeatIN, sExcludeIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN)
     ON DUPLICATE KEY UPDATE sRepeat = sRepeatIN, sExclude = sExcludeIN, tStartdate = tStartdateIN, tEnddate = tEnddateIN, tStarttime = tStarttimeIN, tEndtime = tEndtimeIN;
+    COMMIT;
+END@@
+
+
+CREATE OR REPLACE PROCEDURE setStud (
+    IN lectureIDIN BIGINT,
+    IN sRichtIN VARCHAR(255),
+    IN sPflichtIN VARCHAR(255),
+    IN iSemIN INT, 
+    IN sCreditsIN VARCHAR(255)
+)
+COMMENT 'Add/Update stud'
+BEGIN
+    START TRANSACTION;
+    INSERT INTO rrze_hub_stud (lectureID, sRicht, sPflicht, iSem, sCredits) VALUES (lectureIDIN, sRichtIN, sPflichtIN, iSemIN, sCreditsIN)
+    ON DUPLICATE KEY UPDATE lectureID = lectureIDIN, sRicht = sRichtIN, sPflicht = sPflichtIN, iSem = iSemIN, sCredits = sCreditsIN;
     COMMIT;
 END@@
 
@@ -900,6 +930,7 @@ CREATE OR REPLACE VIEW getPerson AS
 CREATE OR REPLACE VIEW getLecture AS 
     SELECT 
         u.sUnivisID AS univisID,
+        lec.ID AS lectureID,
         lec.sLectureID AS lecture_univisID, 
         lec.sName AS lecture_title,
         lec.sEctsname AS ects_name,
@@ -943,7 +974,13 @@ CREATE OR REPLACE VIEW getLecture AS
         p.title AS lecture_person_title,
         p.firstname AS lecture_person_firstname,
         p.lastname AS lecture_person_lastname,
-        p.person_id AS lecture_person_univisID
+        p.person_id AS lecture_person_univisID,
+        stud.lectureID AS stud_lectureID,
+        stud.ID AS studID,
+        stud.sRicht AS richt,
+        stud.sPflicht AS pflicht,
+        stud.iSem AS sem,
+        stud.sCredits AS credits
     FROM 
         rrze_hub_univis u,
         rrze_hub_lecturetype lectype,
@@ -1008,6 +1045,18 @@ CREATE OR REPLACE VIEW getLecture AS
             gp.ID = pl.personID    
         ) p
     ON lec.ID = p.lectureID
+    LEFT JOIN
+        (SELECT 
+            ID,
+            lectureID,
+            sRicht,
+            sPflicht,
+            iSem,
+            sCredits
+        FROM
+            rrze_hub_stud
+        )stud
+    ON lec.ID = stud.lectureID
     WHERE 
         lec.univisID = u.ID AND
         lec.lecturetypeID = lectype.ID AND

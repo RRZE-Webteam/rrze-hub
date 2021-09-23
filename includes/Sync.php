@@ -377,6 +377,26 @@ class Sync{
                 }
             }
 
+            if (!empty($aLecture['stud'])) {
+                foreach ($aLecture['stud'] as $stud){
+                    // insert/update stud
+                    $prepare_vals = [
+                        $lectureID,
+                        empty($stud['richt'])?'':$stud['richt'],
+                        empty($stud['pflicht'])?'':$stud['pflicht'],
+                        empty($stud['sem'])?0:(int) filter_var($stud['sem'], FILTER_SANITIZE_NUMBER_INT),
+                        empty($stud['credits'])?'':$stud['credits']
+                    ];
+
+                    $wpdb->query($wpdb->prepare("CALL setStud(%d,%s,%s,%d,%s)", $prepare_vals));
+                    if ($wpdb->last_error){
+                        echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                        exit;
+                    }
+
+                }
+            }
+
             if (!empty($lectureID) && !empty($aLecture['courses'])){
                 foreach($aLecture['courses'] as $course){
                     $prepare_vals = [

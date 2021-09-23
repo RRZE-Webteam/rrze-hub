@@ -232,6 +232,7 @@ class UnivISAPI {
                         'gast' => 'gast',
                         'evaluation' => 'evaluation',
                         'doz' => 'doz',
+                        'stud' => 'stud'
                     ],
                 ];
                 break;
