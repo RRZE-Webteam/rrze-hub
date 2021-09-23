@@ -85,6 +85,7 @@ CREATE TABLE rrze_hub_lecture (
     bEarlystudy BOOLEAN NOT NULL DEFAULT 0,
     bGuest BOOLEAN NOT NULL DEFAULT 0,
     bEvaluation BOOLEAN NOT NULL DEFAULT 0,
+    bCertification BOOLEAN NOT NULL DEFAULT 0,
     FOREIGN KEY (univisID) REFERENCES rrze_hub_univis (ID) 
         ON DELETE CASCADE,
     FOREIGN KEY (lecturetypeID) REFERENCES rrze_hub_lecturetype (ID) 
@@ -644,6 +645,7 @@ CREATE OR REPLACE PROCEDURE setLecture (
     IN bEarlystudyIN BOOLEAN,
     IN bGuestIN BOOLEAN,
     IN bEvaluationIN BOOLEAN,
+    IN bCertificationIN BOOLEAN,
     IN bEctsIN BOOLEAN,
     IN sEctscreditsIN VARCHAR(255),
     IN sSummaryIN TEXT,
@@ -654,11 +656,11 @@ CREATE OR REPLACE PROCEDURE setLecture (
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
 BEGIN 
     START TRANSACTION;
-    INSERT INTO rrze_hub_lecture (univisID, sName, sEctsname, sUrl, tStartdate, tEnddate, tStarttime, tEndtime, sComment, sOrganizational, iMaxturnout, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bEcts, sEctscredits, sSummary, sKey, sLectureID, lecturetypeID, languageID) VALUES (univisIDIN, sNameIN, sEctsnameIN, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, lecturetypeIDIN, languageIDIN)
+    INSERT INTO rrze_hub_lecture (univisID, sName, sEctsname, sUrl, tStartdate, tEnddate, tStarttime, tEndtime, sComment, sOrganizational, iMaxturnout, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bCertification, bEcts, sEctscredits, sSummary, sKey, sLectureID, lecturetypeID, languageID) VALUES (univisIDIN, sNameIN, sEctsnameIN, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bCertificationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, lecturetypeIDIN, languageIDIN)
     ON DUPLICATE KEY 
-    UPDATE univisID = univisIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, tStartdate = tStartdateIN, tEnddate = tEnddateIN, tStarttime = tStarttimeIN, tEndtime = tEndtimeIN, sComment = sCommentIN, sOrganizational = sOrganizationalIN, iMaxturnout = iMaxturnoutIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN;
+    UPDATE univisID = univisIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, tStartdate = tStartdateIN, tEnddate = tEnddateIN, tStarttime = tStarttimeIN, tEndtime = tEndtimeIN, sComment = sCommentIN, sOrganizational = sOrganizationalIN, iMaxturnout = iMaxturnoutIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bCertification = bCertificationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND tStartdate = tStartdateIN AND tEnddate = tEnddateIN AND tStarttime = tStarttimeIN AND tEndtime = tEndtimeIN AND sComment = sCommentIN AND sOrganizational = sOrganizationalIN AND iMaxturnout = iMaxturnoutIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN;
+    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND tStartdate = tStartdateIN AND tEnddate = tEnddateIN AND tStarttime = tStarttimeIN AND tEndtime = tEndtimeIN AND sComment = sCommentIN AND sOrganizational = sOrganizationalIN AND iMaxturnout = iMaxturnoutIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bCertification = bCertificationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -702,6 +704,7 @@ CREATE OR REPLACE PROCEDURE storeLecture (
     IN bEarlystudyIN BOOLEAN,
     IN bGuestIN BOOLEAN,
     IN bEvaluationIN BOOLEAN,
+    IN bCertificationIN BOOLEAN,
     IN bEctsIN BOOLEAN,
     IN sEctscreditsIN VARCHAR(255),
     IN sLanguageIN VARCHAR(2),
@@ -722,7 +725,7 @@ BEGIN
     SELECT ID INTO lID FROM rrze_hub_language WHERE sShort = sLanguageIN;
 
     -- store lecture
-    CALL setLecture(univisIDIN, sNameIN, sEctsnameIN, ltID, lID, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, @retID);
+    CALL setLecture(univisIDIN, sNameIN, sEctsnameIN, ltID, lID, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bCertificationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, @retID);
     SET retID = @retID;
 END@@
 
@@ -897,10 +900,10 @@ CREATE OR REPLACE VIEW getPerson AS
 CREATE OR REPLACE VIEW getLecture AS 
     SELECT 
         u.sUnivisID AS univisID,
-        lec.sLectureID AS lecture_id, 
+        lec.sLectureID AS lecture_univisID, 
         lec.sName AS lecture_title,
         lec.sEctsname AS ects_name,
-        lang.sShort AS leclanguage,
+        lang.sLong AS leclanguage,
         lec.sKey AS 'key',
         lectype.sShort AS lecture_type_short,
         lectype.sLong AS lecture_type,
@@ -917,10 +920,12 @@ CREATE OR REPLACE VIEW getLecture AS
         IF(lec.bEcts, "ECTS-Studium", NULL) AS ects,
         lec.sEctscredits AS ects_cred,
         IF(lec.bBeginners, "Für Anfänger geeignet", NULL) AS beginners,
-        IF(lec.bEarlystudy, "Frühstudium", NULL) AS fruehstud,
-        IF(lec.bGuest, "Für Gasthörer zugelassen", NULL) AS gast,
+        IF(lec.bEarlystudy, "Frühstudium", NULL) AS earlystudy,
+        IF(lec.bGuest, "Für Gasthörer zugelassen", NULL) AS guest,
         IF(lec.bEvaluation, "Evaluation", NULL) AS evaluation,
+        IF(lec.bCertification, "Schein", NULL) AS certification,
         co.courseID AS courseID,
+        co.termID AS termID,
         co.sName AS coursename,
         co.sRepeat AS 'repeat',
         co.sExclude AS exclude,
@@ -930,7 +935,7 @@ CREATE OR REPLACE VIEW getLecture AS
         co.title AS course_person_title,
         co.firstname AS course_person_firstname,
         co.lastname AS course_person_lastname,
-        co.ID AS course_person_id,
+        co.person_id AS course_person_univisID,
         co.tStartdate AS term_startdate,
         co.tEnddate AS term_enddate,
         DATE_FORMAT(co.tStarttime, "%H:%i") AS term_starttime,
@@ -938,7 +943,7 @@ CREATE OR REPLACE VIEW getLecture AS
         p.title AS lecture_person_title,
         p.firstname AS lecture_person_firstname,
         p.lastname AS lecture_person_lastname,
-        p.ID AS lecture_person_id
+        p.person_id AS lecture_person_univisID
     FROM 
         rrze_hub_univis u,
         rrze_hub_lecturetype lectype,
@@ -949,6 +954,7 @@ CREATE OR REPLACE VIEW getLecture AS
             c.ID AS courseID, 
             c.sName,
             c.lectureID,
+            t.ID AS termID,
             t.tStartdate,
             t.tEnddate,
             t.tStarttime,
@@ -958,6 +964,7 @@ CREATE OR REPLACE VIEW getLecture AS
             r.sShort,
             r.sNorth,
             r.sEast,
+            tp.person_id,
             tp.title,
             tp.firstname,
             tp.lastname,
@@ -972,6 +979,7 @@ CREATE OR REPLACE VIEW getLecture AS
                 gp.firstname,
                 gp.lastname,
                 gp.ID,
+                gp.person_id,
                 pc.courseID
             FROM
                 getPerson gp,
@@ -991,6 +999,7 @@ CREATE OR REPLACE VIEW getLecture AS
             gp.firstname,
             gp.lastname,
             gp.ID,
+            gp.person_id,
             pl.lectureID
         FROM
             getPerson gp,

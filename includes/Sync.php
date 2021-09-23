@@ -337,6 +337,7 @@ class Sync{
                 !empty($aLecture['fruehstud']),
                 !empty($aLecture['gast']),
                 !empty($aLecture['evaluation']),
+                !empty($aLecture['schein']),
                 !empty($aLecture['ects']),
                 empty($aLecture['ects_cred'])?'':$aLecture['ects_cred'],
                 $lang,
@@ -346,7 +347,7 @@ class Sync{
             ];
 
             // insert/update lectures
-            $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+            $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
 
             if ($wpdb->last_error){
                 echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
