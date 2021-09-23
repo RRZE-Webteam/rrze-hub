@@ -181,7 +181,9 @@ CREATE TABLE rrze_hub_room (
 CREATE TABLE rrze_hub_course (
     ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     lectureID BIGINT NOT NULL,
+    sCourseID VARCHAR(255),
     sName TEXT,
+    UNIQUE(lectureID, sCourseID),
     FOREIGN KEY (lectureID) REFERENCES rrze_hub_lecture (ID) 
         ON DELETE CASCADE,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -545,16 +547,17 @@ END@@
 
 CREATE OR REPLACE PROCEDURE setCourse (
     IN lectureIDIN BIGINT, 
+    IN sCourseIDIN VARCHAR(255),
     IN sNameIN TEXT,
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_course.ID - Add/Update course'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_course (lectureID, sName) VALUES (lectureIDIN, sNameIN)
-    ON DUPLICATE KEY UPDATE sName = sNameIN;
+    INSERT INTO rrze_hub_course (lectureID, sCourseID, sName) VALUES (lectureIDIN, sCourseIDIN, sNameIN)
+    ON DUPLICATE KEY UPDATE sCourseID = sCourseIDIN, sName = sNameIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_course WHERE lectureID = lectureIDIN AND sName = sNameIN;
+    SELECT ID INTO retID FROM rrze_hub_course WHERE lectureID = lectureIDIN AND sCourseID = sCourseIDIN AND sName = sNameIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 

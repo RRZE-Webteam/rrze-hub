@@ -300,11 +300,11 @@ class Sync{
 
         $aUsedIDs = [];
 
-        foreach ($data as $aEntry){
+        foreach ($data as $aLecture){
             $lecID = 0;
             $lang = 'de';
-            if (!empty($aEntry['leclanguage'])){
-                switch ($aEntry['leclanguage']){
+            if (!empty($aLecture['leclanguage'])){
+                switch ($aLecture['leclanguage']){
                     case 'E' : $lang = 'en';
                     break;
                     case 'F' : $lang = 'fr';
@@ -320,29 +320,29 @@ class Sync{
             
             $prepare_vals = [
                 $uID,
-                $aEntry['name'],
-                empty($aEntry['ects_name'])?'':$aEntry['ects_name'],
-                $aEntry['lecture_type'],
-                $aEntry['lecture_type_short'],
-                empty($aEntry['url_description'])?'':$aEntry['url_description'],
-                empty($aEntry['startdate'])?'':$aEntry['startdate'],
-                empty($aEntry['enddate'])?'':$aEntry['enddate'],
-                empty($aEntry['starttime'])?'':$aEntry['starttime'],
-                empty($aEntry['endtime'])?'':$aEntry['endtime'],
-                empty($aEntry['comment'])?'':$aEntry['comment'],
-                empty($aEntry['organizational'])?'':$aEntry['organizational'],
-                empty($aEntry['maxturnout'])?0:(int) filter_var($aEntry['maxturnout'], FILTER_SANITIZE_NUMBER_INT),
-                empty($aEntry['sws'])?0:(int) filter_var($aEntry['sws'], FILTER_SANITIZE_NUMBER_INT),
-                !empty($aEntry['beginners']),
-                !empty($aEntry['fruehstud']),
-                !empty($aEntry['gast']),
-                !empty($aEntry['evaluation']),
-                !empty($aEntry['ects']),
-                empty($aEntry['ects_cred'])?'':$aEntry['ects_cred'],
+                $aLecture['name'],
+                empty($aLecture['ects_name'])?'':$aLecture['ects_name'],
+                $aLecture['lecture_type'],
+                $aLecture['lecture_type_short'],
+                empty($aLecture['url_description'])?'':$aLecture['url_description'],
+                empty($aLecture['startdate'])?'':$aLecture['startdate'],
+                empty($aLecture['enddate'])?'':$aLecture['enddate'],
+                empty($aLecture['starttime'])?'':$aLecture['starttime'],
+                empty($aLecture['endtime'])?'':$aLecture['endtime'],
+                empty($aLecture['comment'])?'':$aLecture['comment'],
+                empty($aLecture['organizational'])?'':$aLecture['organizational'],
+                empty($aLecture['maxturnout'])?0:(int) filter_var($aLecture['maxturnout'], FILTER_SANITIZE_NUMBER_INT),
+                empty($aLecture['sws'])?0:(int) filter_var($aLecture['sws'], FILTER_SANITIZE_NUMBER_INT),
+                !empty($aLecture['beginners']),
+                !empty($aLecture['fruehstud']),
+                !empty($aLecture['gast']),
+                !empty($aLecture['evaluation']),
+                !empty($aLecture['ects']),
+                empty($aLecture['ects_cred'])?'':$aLecture['ects_cred'],
                 $lang,
-                empty($aEntry['summary'])?'':$aEntry['summary'],
-                empty($aEntry['key'])?'':$aEntry['key'],
-                empty($aEntry['lecture_id'])?'':$aEntry['lecture_id']
+                empty($aLecture['summary'])?'':$aLecture['summary'],
+                empty($aLecture['key'])?'':$aLecture['key'],
+                empty($aLecture['lecture_id'])?'':$aLecture['lecture_id']
             ];
 
             // insert/update lectures
@@ -356,16 +356,10 @@ class Sync{
             $lectureID = $wpdb->get_var("SELECT @retID");
             $aCnt['sync']++;
 
-
-            if (empty($lectureID)){
-                echo 'empty!' . $aEntry['name'] . ' ' . $aEntry['key'];
-                exit;
-            }
-
             $aUsedIDs[] = $lectureID;
 
-            if (!empty($aEntry['lecturers'])){
-                foreach($aEntry['lecturers'] as $person){
+            if (!empty($aLecture['lecturers'])){
+                foreach($aLecture['lecturers'] as $person){
                     $personID = $this->storePerson($person);
 
                     // insert/update personLecture
@@ -382,15 +376,16 @@ class Sync{
                 }
             }
 
-            if (!empty($lectureID) && !empty($aEntry['courses'])){
-                foreach($aEntry['courses'] as $course){
+            if (!empty($lectureID) && !empty($aLecture['courses'])){
+                foreach($aLecture['courses'] as $course){
                     $prepare_vals = [
                         $lectureID,
+                        empty($course['course_id'])?'':$course['course_id'],
                         empty($course['coursename'])?'':$course['coursename']
                     ];
         
                     // insert/update course
-                    $wpdb->query($wpdb->prepare("CALL setCourse(%d,%s, @retID)", $prepare_vals));
+                    $wpdb->query($wpdb->prepare("CALL setCourse(%d,%s,%s, @retID)", $prepare_vals));
         
                     if ($wpdb->last_error){
                         echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
@@ -405,8 +400,8 @@ class Sync{
         
                             // insert/update personCourse
                             $prepare_vals = [
-                                $courseID,
-                                $personID
+                                $personID,
+                                $courseID
                             ];
         
                             $wpdb->query($wpdb->prepare("CALL setPersonCourse(%d,%d)", $prepare_vals));
@@ -416,8 +411,6 @@ class Sync{
                             }
                         }
                     }
-        
-
 
                     foreach ($course['term'] as $term){
                         $prepare_vals = [
@@ -461,18 +454,18 @@ class Sync{
             }
         }
 
-        // // delete unused lectures
-        // $prepare_vals = [
-        //     $uID,
-        //     implode(',', $aUsedIDs)
-        // ];
+        // delete unused lectures
+        $prepare_vals = [
+            $uID,
+            implode(',', $aUsedIDs)
+        ];
 
-        // $wpdb->query($wpdb->prepare("CALL deleteLecture(%d,%s, @iDel)", $prepare_vals));
-        // if ($wpdb->last_error){
-        //     echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
-        //     exit;
-        // }
-        // $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
+        $wpdb->query($wpdb->prepare("CALL deleteLecture(%d,%s, @iDel)", $prepare_vals));
+        if ($wpdb->last_error){
+            echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+            exit;
+        }
+        $aCnt['del'] = $wpdb->get_var("SELECT @iDel");
 
         return $aCnt;
     }

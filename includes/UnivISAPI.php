@@ -240,6 +240,7 @@ class UnivISAPI {
                     'node' => 'Lecture',
                     'fields' => [
                         'term' => 'term',
+                        'course_id' => 'id',
                         'coursename' => 'coursename',
                         'course_key' => 'key',
                         'doz' => 'doz',
