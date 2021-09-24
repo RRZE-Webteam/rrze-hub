@@ -402,11 +402,12 @@ class Sync{
                     $prepare_vals = [
                         $lectureID,
                         empty($course['course_id'])?'':$course['course_id'],
-                        empty($course['coursename'])?'':$course['coursename']
+                        empty($course['coursename'])?'':$course['coursename'],
+                        empty($course['time_description'])?'':$course['time_description']
                     ];
         
                     // insert/update course
-                    $wpdb->query($wpdb->prepare("CALL setCourse(%d,%s,%s, @retID)", $prepare_vals));
+                    $wpdb->query($wpdb->prepare("CALL setCourse(%d,%s,%s,%s, @retID)", $prepare_vals));
         
                     if ($wpdb->last_error){
                         echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);

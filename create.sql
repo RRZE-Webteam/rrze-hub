@@ -184,6 +184,7 @@ CREATE TABLE rrze_hub_course (
     lectureID BIGINT NOT NULL,
     sCourseID VARCHAR(255),
     sName TEXT,
+    sDescription VARCHAR(255),
     UNIQUE(lectureID, sCourseID),
     FOREIGN KEY (lectureID) REFERENCES rrze_hub_lecture (ID) 
         ON DELETE CASCADE,
@@ -565,15 +566,16 @@ CREATE OR REPLACE PROCEDURE setCourse (
     IN lectureIDIN BIGINT, 
     IN sCourseIDIN VARCHAR(255),
     IN sNameIN TEXT,
+    IN sDescriptionIN VARCHAR(255),
     OUT retID INT
 )
 COMMENT 'return: rrze_hub_course.ID - Add/Update course'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_course (lectureID, sCourseID, sName) VALUES (lectureIDIN, sCourseIDIN, sNameIN)
-    ON DUPLICATE KEY UPDATE sCourseID = sCourseIDIN, sName = sNameIN;
+    INSERT INTO rrze_hub_course (lectureID, sCourseID, sName, sDescription) VALUES (lectureIDIN, sCourseIDIN, sNameIN, sDescriptionIN)
+    ON DUPLICATE KEY UPDATE sCourseID = sCourseIDIN, sName = sNameIN, sDescription = sDescriptionIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_course WHERE lectureID = lectureIDIN AND sCourseID = sCourseIDIN AND sName = sNameIN;
+    SELECT ID INTO retID FROM rrze_hub_course WHERE lectureID = lectureIDIN AND sCourseID = sCourseIDIN AND sName = sNameIN AND sDescription = sDescriptionIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -958,6 +960,7 @@ CREATE OR REPLACE VIEW getLecture AS
         co.courseID AS courseID,
         co.termID AS termID,
         co.sName AS coursename,
+        co.sDescription AS time_description,
         co.sRepeat AS 'repeat',
         co.sExclude AS exclude,
         co.sShort AS room,
@@ -991,6 +994,7 @@ CREATE OR REPLACE VIEW getLecture AS
             c.ID AS courseID, 
             c.sName,
             c.lectureID,
+            c.sDescription,
             t.ID AS termID,
             t.tStartdate,
             t.tEnddate,

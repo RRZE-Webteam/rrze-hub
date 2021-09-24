@@ -243,6 +243,7 @@ class UnivISAPI {
                         'term' => 'term',
                         'course_id' => 'id',
                         'coursename' => 'coursename',
+                        'time_description' => 'time_description',
                         'course_key' => 'key',
                         'doz' => 'doz',
                     ],
