@@ -81,6 +81,11 @@ CREATE TABLE rrze_hub_lecture (
     iSws INT(2) NOT NULL,
     bEcts BOOLEAN NOT NULL DEFAULT 0,
     sEctscredits VARCHAR(255),
+    sEctsliterature TEXT,
+    sEctssummary TEXT,
+    sEctsorganizational TEXT,
+    sKeywords TEXT,
+    sLiterature TEXT,
     bBeginners BOOLEAN NOT NULL DEFAULT 0,
     bEarlystudy BOOLEAN NOT NULL DEFAULT 0,
     bGuest BOOLEAN NOT NULL DEFAULT 0,
@@ -218,7 +223,6 @@ CREATE TABLE rrze_hub_term (
     tEnddate DATE,
     tStarttime TIME,
     tEndtime TIME,
-    UNIQUE(courseID, roomID),
     FOREIGN KEY (courseID) REFERENCES rrze_hub_course (ID) 
         ON DELETE CASCADE,
     FOREIGN KEY (roomID) REFERENCES rrze_hub_room (ID) 
@@ -517,12 +521,19 @@ END@@
 
 
 CREATE OR REPLACE PROCEDURE setLanguage (
-    IN aLangIN BLOB
+    IN sShortIN VARCHAR(2), 
+    IN sLongIN VARCHAR(255),
+    OUT retID INT
 )
 BEGIN
-    SET @sql = CONCAT("INSERT INTO rrze_hub_language (sShort, sLong) VALUES ", aLangIN, " ON DUPLICATE KEY UPDATE sLong = VALUES(sLong)");
-    PREPARE stmt FROM @sql;
-    EXECUTE stmt;
+    START TRANSACTION;
+    INSERT INTO rrze_hub_language (sShort, sLong) VALUES (sShortIN, sLongIN)
+    ON DUPLICATE KEY UPDATE sLong = sLongIN;
+    COMMIT;
+    SELECT ID INTO retID FROM rrze_hub_language WHERE sShort = sShortIN;
+    IF retID <= 0 THEN
+        ROLLBACK;
+    END IF; 
 END@@
 
 
@@ -659,11 +670,11 @@ END@@
 DELIMITER @@
 
 CREATE OR REPLACE PROCEDURE setLecture (
-    IN univisIDIN INT, 
-    IN sNameIN VARCHAR(255),
-    IN sEctsnameIN VARCHAR(255),
+    IN univisIDIN INT,
     IN lecturetypeIDIN INT, 
     IN languageIDIN INT, 
+    IN sNameIN VARCHAR(255),
+    IN sEctsnameIN VARCHAR(255),
     IN sUrlIN VARCHAR(255),
     IN tStartdateIN DATE,
     IN tEnddateIN DATE,
@@ -680,6 +691,11 @@ CREATE OR REPLACE PROCEDURE setLecture (
     IN bCertificationIN BOOLEAN,
     IN bEctsIN BOOLEAN,
     IN sEctscreditsIN VARCHAR(255),
+    IN sEctsliteratureIN TEXT,
+    IN sEctssummaryIN TEXT,
+    IN sEctsorganizationalIN TEXT,
+    IN sKeywordsIN TEXT,
+    IN sLiteratureIN TEXT,
     IN sSummaryIN TEXT,
     IN sKeyIN VARCHAR(255),
     IN sLectureIDIN VARCHAR(255), 
@@ -688,11 +704,11 @@ CREATE OR REPLACE PROCEDURE setLecture (
 COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
 BEGIN 
     START TRANSACTION;
-    INSERT INTO rrze_hub_lecture (univisID, sName, sEctsname, sUrl, tStartdate, tEnddate, tStarttime, tEndtime, sComment, sOrganizational, iMaxturnout, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bCertification, bEcts, sEctscredits, sSummary, sKey, sLectureID, lecturetypeID, languageID) VALUES (univisIDIN, sNameIN, sEctsnameIN, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bCertificationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, lecturetypeIDIN, languageIDIN)
+    INSERT INTO rrze_hub_lecture (univisID, lecturetypeID, languageID, sName, sEctsname, sUrl, tStartdate, tEnddate, tStarttime, tEndtime, sComment, sOrganizational, iMaxturnout, iSws, bBeginners, bEarlystudy, bGuest, bEvaluation, bCertification, bEcts, sEctscredits, sEctsliterature, sEctssummary, sEctsorganizational, sKeywords, sLiterature, sSummary, sKey, sLectureID) VALUES (univisIDIN, lecturetypeIDIN, languageIDIN, sNameIN, sEctsnameIN, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bCertificationIN, bEctsIN, sEctscreditsIN, sEctsliteratureIN, sEctssummaryIN, sEctsorganizationalIN, sKeywordsIN, sLiteratureIN, sSummaryIN, sKeyIN, sLectureIDIN)
     ON DUPLICATE KEY 
-    UPDATE univisID = univisIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, tStartdate = tStartdateIN, tEnddate = tEnddateIN, tStarttime = tStarttimeIN, tEndtime = tEndtimeIN, sComment = sCommentIN, sOrganizational = sOrganizationalIN, iMaxturnout = iMaxturnoutIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bCertification = bCertificationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN;
+    UPDATE univisID = univisIDIN, lecturetypeID = lecturetypeIDIN, languageID = languageIDIN, sName = sNameIN, sEctsname = sEctsnameIN, sUrl = sUrlIN, tStartdate = tStartdateIN, tEnddate = tEnddateIN, tStarttime = tStarttimeIN, tEndtime = tEndtimeIN, sComment = sCommentIN, sOrganizational = sOrganizationalIN, iMaxturnout = iMaxturnoutIN, iSws = iSwsIN, bBeginners = bBeginnersIN, bEarlystudy = bEarlystudyIN, bGuest = bGuestIN, bEvaluation = bEvaluationIN, bCertification = bCertificationIN, bEcts = bEctsIN, sEctscredits = sEctscreditsIN, sEctsliterature = sEctsliteratureIN, sEctssummary = sEctssummaryIN, sEctsorganizational = sEctsorganizationalIN, sKeywords = sKeywordsIN, sLiterature = sLiteratureIN, sSummary = sSummaryIN, sKey = sKeyIN, sLectureID = sLectureIDIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND tStartdate = tStartdateIN AND tEnddate = tEnddateIN AND tStarttime = tStarttimeIN AND tEndtime = tEndtimeIN AND sComment = sCommentIN AND sOrganizational = sOrganizationalIN AND iMaxturnout = iMaxturnoutIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bCertification = bCertificationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN;
+    SELECT ID INTO retID FROM rrze_hub_lecture WHERE univisID = univisIDIN AND lecturetypeID = lecturetypeIDIN AND languageID = languageIDIN AND sName = sNameIN AND sEctsname = sEctsnameIN AND sUrl = sUrlIN AND tStartdate = tStartdateIN AND tEnddate = tEnddateIN AND tStarttime = tStarttimeIN AND tEndtime = tEndtimeIN AND sComment = sCommentIN AND sOrganizational = sOrganizationalIN AND iMaxturnout = iMaxturnoutIN AND iSws = iSwsIN AND bBeginners = bBeginnersIN AND bEarlystudy = bEarlystudyIN AND bGuest = bGuestIN AND bEvaluation = bEvaluationIN AND bCertification = bCertificationIN AND bEcts = bEctsIN AND sEctscredits = sEctscreditsIN AND sEctsliterature = sEctsliteratureIN AND sEctssummary = sEctssummaryIN AND sEctsorganizational = sEctsorganizationalIN AND sKeywords = sKeywordsIN AND sLiterature = sLiteratureIN AND sSummary = sSummaryIN AND sKey = sKeyIN AND sLectureID = sLectureIDIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -714,51 +730,6 @@ BEGIN
     -- PREPARE stmt FROM @sql;
     -- EXECUTE stmt;
     -- INSERT INTO rrze_hub_personLecture (personID, lectureID) VALUES (213,213),(321,456);
-END@@
-
-
-CREATE OR REPLACE PROCEDURE storeLecture (
-    IN univisIDIN INT,
-    IN sNameIN VARCHAR(255),
-    IN sEctsnameIN VARCHAR(255),
-    IN lectureTypeShortIN VARCHAR(10), 
-    IN lectureTypeIN VARCHAR(255), 
-    IN sUrlIN VARCHAR(255),
-    IN tStartdateIN DATE,
-    IN tEnddateIN DATE,
-    IN tStarttimeIN TIME,
-    IN tEndtimeIN TIME,
-    IN sCommentIN TEXT,
-    IN sOrganizationalIN TEXT,
-    IN iMaxturnoutIN INT,
-    IN iSwsIN INT(2),
-    IN bBeginnersIN BOOLEAN,
-    IN bEarlystudyIN BOOLEAN,
-    IN bGuestIN BOOLEAN,
-    IN bEvaluationIN BOOLEAN,
-    IN bCertificationIN BOOLEAN,
-    IN bEctsIN BOOLEAN,
-    IN sEctscreditsIN VARCHAR(255),
-    IN sLanguageIN VARCHAR(2),
-    IN sSummaryIN TEXT,
-    IN sKeyIN VARCHAR(255),
-    IN sLectureIDIN VARCHAR(255),
-    OUT retID BIGINT
-)
-COMMENT 'return: rrze_hub_lecture.ID - Add/Update lecture'
-BEGIN 
-    DECLARE ltID INT DEFAULT 0;
-    DECLARE lID INT DEFAULT 0;
-
-    START TRANSACTION;
-    -- store reference data
-    CALL setLectureType(lectureTypeShortIN, lectureTypeIN, @retID);
-    SELECT @retID INTO ltID;
-    SELECT ID INTO lID FROM rrze_hub_language WHERE sShort = sLanguageIN;
-
-    -- store lecture
-    CALL setLecture(univisIDIN, sNameIN, sEctsnameIN, ltID, lID, sUrlIN, tStartdateIN, tEnddateIN, tStarttimeIN, tEndtimeIN, sCommentIN, sOrganizationalIN, iMaxturnoutIN, iSwsIN, bBeginnersIN, bEarlystudyIN, bGuestIN, bEvaluationIN, bCertificationIN, bEctsIN, sEctscreditsIN, sSummaryIN, sKeyIN, sLectureIDIN, @retID);
-    SET retID = @retID;
 END@@
 
 
@@ -1066,10 +1037,4 @@ CREATE OR REPLACE VIEW getLecture AS
         lec.lecturetypeID = lectype.ID AND
         lec.languageID = lang.ID;
 
-
-
-
-
--- Stammdaten:
-CALL setLanguage("('de', 'German'),('en', 'English'),('es', 'Spanish'),('fr', 'French'),('ru', 'Russian'),('zh', 'Chinese')");
 

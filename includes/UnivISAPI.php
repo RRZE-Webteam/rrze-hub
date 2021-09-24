@@ -212,6 +212,9 @@ class UnivISAPI {
                         'starttime' => 'starttime',
                         'endtime' => 'endtime',
                         'ects_name' => 'ects_name',
+                        'ects_summary' => 'ects_summary',
+                        'ects_literature' => 'ects_literature',
+                        'ects_organizational' => 'ects_organizational',
                         'comment' => 'comment',
                         'leclanguage' => 'leclanguage',
                         'key' => 'key',
@@ -223,16 +226,17 @@ class UnivISAPI {
                         'url_description' => 'url_description',
                         'organizational' => 'organizational',
                         'summary' => 'summary',
-                        'schein' => 'schein',
+                        'certification' => 'schein',
                         'sws' => 'sws',
                         'ects' => 'ects',
                         'ects_cred' => 'ects_cred',
                         'beginners' => 'beginners',
-                        'fruehstud' => 'fruehstud',
-                        'gast' => 'gast',
+                        'earlystudy' => 'fruehstud',
+                        'guest' => 'gast',
                         'evaluation' => 'evaluation',
                         'doz' => 'doz',
-                        'stud' => 'stud'
+                        'stud' => 'stud',
+                        'literature' => 'literature',
                     ],
                 ];
                 break;
@@ -879,6 +883,7 @@ class UnivISAPI {
             'evaluation' => __('Evaluation', 'rrze-univis'),
             'locations' => '',
             'organizational' => '',
+            'summary' => ''
         ];
 
         foreach($data as $nr => $row){
@@ -913,7 +918,7 @@ class UnivISAPI {
                             }
                         }
                     }
-                }elseif ($field == 'organizational'){
+                }elseif ($field == 'organizational' || $field == 'summary'){
                     if (isset($data[$nr][$field])){
                         $data[$nr][$field] = self::makeHTML($data[$nr][$field]);
                     }

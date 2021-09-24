@@ -301,29 +301,58 @@ class Sync{
         $aUsedIDs = [];
 
         foreach ($data as $aLecture){
-            $lecID = 0;
-            $lang = 'de';
+            $aLang = ['short' => 'de', 'long' => 'German'];
             if (!empty($aLecture['leclanguage'])){
                 switch ($aLecture['leclanguage']){
-                    case 'E' : $lang = 'en';
-                    break;
-                    case 'F' : $lang = 'fr';
+                    case 'E' : $aLang = ['short' => 'en', 'long' => 'English'];
                         break;
-                    case 'S' : $lang = 'es';
+                    case 'F' : $aLang = ['short' => 'fr', 'long' => 'French'];
                         break;
-                    case 'R' : $lang = 'ru';
+                    case 'S' : $aLang = ['short' => 'es', 'long' => 'Spanish'];
                         break;
-                    case 'C' : $lang = 'zh';
+                    case 'R' : $aLang = ['short' => 'ru', 'long' => 'Russian'];
+                        break;
+                    case 'C' : $aLang = ['short' => 'zh', 'long' => 'Chinese'];
                         break;
                 }
             }
-            
+
+            $prepare_vals = [
+                $aLang['short'],
+                $aLang['long']
+            ];
+
+            // insert/update lecturetype
+            $wpdb->query($wpdb->prepare("CALL setLanguage(%s,%s, @retID)", $prepare_vals));
+
+            if ($wpdb->last_error){
+                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                exit;
+            }
+
+            $languageID = $wpdb->get_var("SELECT @retID");
+
+            $prepare_vals = [
+                $aLecture['lecture_type'],
+                $aLecture['lecture_type_short']
+            ];
+
+            // insert/update lecturetype
+            $wpdb->query($wpdb->prepare("CALL setLecturetype(%s,%s, @retID)", $prepare_vals));
+
+            if ($wpdb->last_error){
+                echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
+                exit;
+            }
+
+            $lecturetypeID = $wpdb->get_var("SELECT @retID");
+
             $prepare_vals = [
                 $uID,
+                $lecturetypeID,
+                $languageID,
                 $aLecture['name'],
                 empty($aLecture['ects_name'])?'':$aLecture['ects_name'],
-                $aLecture['lecture_type'],
-                $aLecture['lecture_type_short'],
                 empty($aLecture['url_description'])?'':$aLecture['url_description'],
                 empty($aLecture['startdate'])?'':$aLecture['startdate'],
                 empty($aLecture['enddate'])?'':$aLecture['enddate'],
@@ -334,20 +363,24 @@ class Sync{
                 empty($aLecture['maxturnout'])?0:(int) filter_var($aLecture['maxturnout'], FILTER_SANITIZE_NUMBER_INT),
                 empty($aLecture['sws'])?0:(int) filter_var($aLecture['sws'], FILTER_SANITIZE_NUMBER_INT),
                 !empty($aLecture['beginners']),
-                !empty($aLecture['fruehstud']),
-                !empty($aLecture['gast']),
+                !empty($aLecture['earlystudy']),
+                !empty($aLecture['guest']),
                 !empty($aLecture['evaluation']),
-                !empty($aLecture['schein']),
+                !empty($aLecture['certification']),
                 !empty($aLecture['ects']),
                 empty($aLecture['ects_cred'])?'':$aLecture['ects_cred'],
-                $lang,
+                empty($aLecture['ects_literature'])?'':$aLecture['ects_literature'],
+                empty($aLecture['ects_summary'])?'':$aLecture['ects_summary'],
+                empty($aLecture['ects_organizational'])?'':$aLecture['ects_organizational'],
+                empty($aLecture['keywords'])?'':$aLecture['keywords'],
+                empty($aLecture['literature'])?'':$aLecture['literature'],
                 empty($aLecture['summary'])?'':$aLecture['summary'],
                 empty($aLecture['key'])?'':$aLecture['key'],
                 empty($aLecture['lecture_id'])?'':$aLecture['lecture_id']
             ];
 
             // insert/update lectures
-            $wpdb->query($wpdb->prepare("CALL storeLecture(%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+            $wpdb->query($wpdb->prepare("CALL setLecture(%d,%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
 
             if ($wpdb->last_error){
                 echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
