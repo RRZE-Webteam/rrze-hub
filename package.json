@@ -1,6 +1,6 @@
 {
 	"name": "rrze-hub",
-	"version": "0.3.14",
+	"version": "0.3.15",
 	"description": "RRZE-Hub - one hub to rule them all.",
 	"main": "rrze-hub.php",
 	"scripts": {

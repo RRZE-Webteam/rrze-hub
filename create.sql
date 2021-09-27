@@ -953,6 +953,7 @@ CREATE OR REPLACE VIEW getLecture AS
         p.title AS lecture_person_title,
         p.firstname AS lecture_person_firstname,
         p.lastname AS lecture_person_lastname,
+        p.name AS lecture_person_name,
         p.person_id AS lecture_person_univisID,
         stud.lectureID AS stud_lectureID,
         stud.ID AS studID,
@@ -1015,6 +1016,7 @@ CREATE OR REPLACE VIEW getLecture AS
             gp.title,
             gp.firstname,
             gp.lastname,
+            gp.name,
             gp.ID,
             gp.person_id,
             pl.lectureID

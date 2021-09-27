@@ -104,11 +104,8 @@ class Sync{
 
         $data = '';
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
-        $data = $univis->getData('personAll', NULL);
-
-        // echo '<pre>';
-        // var_dump($data);
-        // exit;
+        // $data = $univis->getData('personAll', NULL); // falsch! personByOrga liefert alle Personen
+        $data = $univis->getData('personByOrga', NULL);
 
         $aUsedIDs = [];
 
