@@ -786,13 +786,7 @@ END@@
 DELIMITER ;
 
 
-
-
-
-
 -- views
-
-
 CREATE OR REPLACE VIEW getPerson AS 
     SELECT 
         orga.org_univisID,
@@ -900,6 +894,8 @@ CREATE OR REPLACE VIEW getPerson AS
 
 
 
+
+
 CREATE OR REPLACE VIEW getLecture AS 
     SELECT 
         u.sUnivisID AS univisID,
@@ -908,6 +904,7 @@ CREATE OR REPLACE VIEW getLecture AS
         lec.sName AS lecture_title,
         lec.sEctsname AS ects_name,
         lang.sLong AS leclanguage,
+        lang.sShort AS leclanguage_short,
         lec.sKey AS 'key',
         lectype.sShort AS lecture_type_short,
         lectype.sLong AS lecture_type,
