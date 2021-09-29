@@ -5,14 +5,14 @@ namespace RRZE\Hub;
 defined('ABSPATH') || exit;
 
 
-class Functions{
+class DBFunctions{
     protected $showPositon;
     protected $hidePositon;
 
     public function __construct($atts) {
         // $this->sem = (!empty($atts['sem']) && self::checkSemester($atts['sem']) ? $atts['sem'] : '');
-        $this->showPositon = (!empty($atts['zeige_jobs']) ? explode('|', $atts['zeige_jobs']) : []);
-        $this->hidePositon = (!empty($atts['ignoriere_jobs']) ? explode('|', $atts['ignoriere_jobs']) : []);
+        $this->showPositon = (!empty($atts['show_jobs']) ? explode('|', $atts['show_jobs']) : []);
+        $this->hidePositon = (!empty($atts['ignore_jobs']) ? explode('|', $atts['ignore_jobs']) : []);
     }
 
 

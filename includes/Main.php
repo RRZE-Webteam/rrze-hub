@@ -25,6 +25,8 @@ class Main {
         $sync = new Sync($this->pluginFile);
         $sync->onLoaded();
 
+        $restAPI = new RESTAPI();
+
         // add_action( 'update_option_rrze-hub', [$this, 'switchTask'] );
         add_filter( 'pre_update_option_rrze-hub',  [$this, 'switchTask'], 10, 1 );
 
