@@ -212,7 +212,6 @@ CREATE TABLE rrze_hub_personCourse (
 );
 
 
-
 CREATE TABLE rrze_hub_term (
     ID BIGINT AUTO_INCREMENT PRIMARY KEY,
     courseID BIGINT NOT NULL,
@@ -223,6 +222,7 @@ CREATE TABLE rrze_hub_term (
     tEnddate DATE,
     tStarttime TIME,
     tEndtime TIME,
+    UNIQUE(courseID, roomID, sRepeat, sExclude, tStartdate, tEnddate, tStarttime, tEndtime),
     FOREIGN KEY (courseID) REFERENCES rrze_hub_course (ID) 
         ON DELETE CASCADE,
     FOREIGN KEY (roomID) REFERENCES rrze_hub_room (ID) 
