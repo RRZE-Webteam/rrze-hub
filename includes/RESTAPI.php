@@ -24,10 +24,13 @@ class RESTAPI {
 
     public function __construct() {
         add_action('rest_api_init', [$this, 'registerRoutes']);
+
+        $this->setUnivisID('100100');
     }
 
     public function registerRoutes(){
         $aEndpoint = [
+            'univisID' => 'setUnivisID',
             'person' => 'getPerson', 
             'lecture' => 'getLecture', 
             // 'publication' => 'getPublication',
@@ -47,6 +50,14 @@ class RESTAPI {
 
     public function getRouteArgs($endpoint){
         $aRet = [
+            'univisID' => [
+                'sID' => [
+                    'description' => __('sID is the department\'s UnivIS ID', 'rrze-hub'),
+                    'type' => 'string',
+                    'required' => TRUE,
+                    'validate_callback' => [$this, 'valStr']
+                ],
+            ],
             'person' => [
                 'filterBy' => [
                     'description' => __('filterBy is used to define the filter by ID, name or department', 'rrze-hub'),
@@ -108,6 +119,29 @@ class RESTAPI {
 
         return $aRet[$endpoint];
     }
+
+    public function isNewUnivisID($sID){
+        global $wpdb;
+
+        $ID = $wpdb->get_var($wpdb->prepare("SELECT ID FROM rrze_hub_univis WHERE sUnivisID = %s", $sID));
+        if ($wpdb->last_error) {
+            echo json_encode($wpdb->last_error);
+            exit;
+        }
+
+        return is_null($ID);
+    }
+
+
+
+    public function setUnivisID($sID){
+        // check if $sID is not already stored in db
+        if ($this->isNewUnivisID($sID)) {
+            // check if $sID returns valid info 
+            // store and trigger Sync to prefetch data
+        }
+    }
+
 
     public function getPerson($args){
         $this->dbfuncs = new DBFunctions($args);
