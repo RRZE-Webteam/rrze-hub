@@ -291,10 +291,6 @@ class Sync{
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
         $data = $univis->getData('lectureByDepartment');
 
-        // echo '<pre>';
-        // var_dump($data);
-        // exit;
-
         $aUsedIDs = [];
 
         foreach ($data as $aLecture){
