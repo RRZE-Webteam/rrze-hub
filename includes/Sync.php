@@ -18,9 +18,12 @@ class Sync{
 
     protected $UnivISURL;
 
+    protected $atts;
+
     public function __construct($pluginFile) {
         $this->pluginFile = $pluginFile;
         $this->UnivISURL = (!empty($this->options['sync_univis_url']) ? $this->options['sync_univis_url'] : 'https://univis.uni-erlangen.de');
+        $this->atts = ['isHub' => TRUE];
     }
 
 
@@ -103,7 +106,7 @@ class Sync{
         ];
 
         $data = '';
-        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
+        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, $this->atts);
         // $data = $univis->getData('personAll', NULL); // falsch! personByOrga liefert alle Personen
         $data = $univis->getData('personByOrga', NULL);
 
@@ -288,7 +291,7 @@ class Sync{
         ];
 
         $data = '';
-        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, NULL);
+        $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, $this->atts);
         $data = $univis->getData('lectureByDepartment');
 
         $aUsedIDs = [];

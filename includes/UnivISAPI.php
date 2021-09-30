@@ -16,6 +16,7 @@ class UnivISAPI {
     protected $api;
     protected $orgID;
     protected $atts;
+    protected $isHub;
     protected $univisParam;
     protected $showJobs;
     protected $hideJobs;
@@ -29,7 +30,7 @@ class UnivISAPI {
         $this->sem = (!empty($this->atts['sem']) && self::checkSemester($this->atts['sem']) ? $this->atts['sem'] : '');
         $this->showJobs = (!empty($this->atts['zeige_jobs']) ? explode('|', $this->atts['zeige_jobs']) : []);
         $this->hideJobs = (!empty($this->atts['ignoriere_jobs']) ? explode('|', $this->atts['ignoriere_jobs']) : []);
-        //  $this->hideJobs = (!empty($this->showJobs) && !empty($this->hideJobs) ? array_diff($this->showJobs, $this->hideJobs) : $this->hideJobs);
+        $this->isHub = (!empty($this->atts['isHub']) ? $this->atts['isHub'] : FALSE);
     }
 
 
@@ -66,7 +67,9 @@ class UnivISAPI {
         $data = json_decode( $data, true);
         $data = $this->mapIt($dataType, $data);
         $data = $this->dict($data);
-        // $data = $this->sortGroup($dataType, $data);
+        if (!$this->isHub){
+            $data = $this->sortGroup($dataType, $data);
+        }
         return $data;
     }
 
