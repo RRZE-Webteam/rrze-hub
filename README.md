@@ -9,4 +9,4 @@ DB based data hub using several API
 - Output 100% Schema-conform https://schema.org/
 - Exception Handling returns output usable with https://gitlab.rrze.fau.de/rrze-webteam/rrze-log and https://gitlab.rrze.fau.de/rrze-webteam/rrze-notices 
 
-Milestones siehe https://github.com/RRZE-Webteam/rrze-hub/milestones
+Milestones: https://github.com/RRZE-Webteam/rrze-hub/milestones
