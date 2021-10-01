@@ -13,33 +13,44 @@ class Schema {
 
     public function __construct() {
         $this->organization = [
-            '@type' => 'Organization',
-            'name' => '',
+            // '@context' => 'https://schema.org/CollegeOrUniversity',
+            '@type' => 'CollegeOrUniversity',
+            'name' => 'organization',
             'sameAs' => [],
+            'department' => [
+                '@type' => 'Organization',
+                'name' => 'department', // schema-fieldname => data-fieldname
+            ],
         ];
     
         $this->address = [
+            // '@context' => 'https://schema.org/address',
             '@type' => 'PostalAddress',
             'addressLocality' => '',
             'addressCountry' => '',
+            'postalCode' => '',
+            'streetAddress' => '',
         ];
     
         $this->person = [
+            // '@context' => 'https://schema.org/', // not https://schema.org/person !
             '@type' => 'Person',
-            'name' => '',
-            'firstname' => '', // nur Test - ist ein ungültiges Element für das Schema
-            'jobTitle' => '',
-            'worksFor ' => $this->organization,
-            'url' => '',
+            'name' => '', // firstname blank lastname
+            'jobTitle' => 'title_long',
+            'worksFor' => $this->organization,
             'address' => $this->address,
+            'email' => '',
+            'telephone' => '',
+            'url' => '',
         ];
     }
 
 
     // in_array does not support multidimensional arrays, let's fix it
+    // and we've got to look for both keys and keys of values if value is an array
     static function in_array_multi($needle, $haystack) {
-        foreach ($haystack as $item) {
-            if (($item == $needle) || (is_array($item) && self::in_array_multi($needle, $item))) {
+        foreach ($haystack as $key => $values) {
+            if (($key == $needle) || (is_array($values) && self::in_array_multi($needle, $values))) {
                 return true;
             }
         }
@@ -49,7 +60,7 @@ class Schema {
 
     public function getSchema($sType, $aIn) {
         global $wpdb;
-        $aRet = [];
+        $aRet = ['@context' => 'https://schema.org/'];
 
         // Testdata:
         $aIn = [
@@ -96,9 +107,30 @@ class Schema {
         $aRet = ['@type' => $aSchema['@type']];
 
         foreach ($aIn as $ID => $aEntry) {
-            foreach ($aEntry as $field => $value) {
-                if (self::in_array_multi($field, array_keys($aSchema))) {
-                    $aRet[$field] = $value;
+            foreach ($aEntry as $keyIn => $valIn) {
+
+                // this would work if schema's keys were unique but the are not (f.e. name in Person and name in Department and name in Organization)
+                // if (self::in_array_multi($field, $aSchema)) {
+                //     $aRet[$field] = $value;
+                // }
+
+                // 2DO: who to make locations fit? does Schema provide more than one email,phone,fax for Person?
+
+                // this works perfectly:
+                foreach($aSchema as $keySchema => $valSchema){
+                    if (is_array($valSchema)){
+                        foreach ($valSchema as $keySchemaSub => $valSchemaSub){
+                            if ($keyIn == $keySchemaSub){
+                                $aRet[$keySchema][$keySchemaSub] = $valIn;
+                            }elseif ($keyIn == $valSchemaSub){
+                                $aRet[$keySchema][$keySchemaSub] = $valIn;
+                            }
+                        }
+                    }else{
+                        if ($keyIn == $valSchema){
+                            $aRet[$keySchema] = $valIn;
+                        }
+                    }
                 }
             }
         }

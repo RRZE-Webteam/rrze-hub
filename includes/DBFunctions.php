@@ -109,7 +109,6 @@ class DBFunctions{
         }
 
         // Test
-
         $schema = new Schema();
         $aRet = $schema->getSchema('person', $aRet);
 
