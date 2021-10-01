@@ -1,18 +1,3 @@
--- prefix: rrze_hub_
-
--- CREATE TABLE rrze_hub_microdata (
---     ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
---     itemscope
---     sTable VARCHAR(2) NOT NULL,
---     sField VARCHAR(2) NOT NULL,
---     sItemprop VARCHAR(2) NOT NULL,
---     sValue 
---     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
---     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
--- );
-
-
-
 CREATE TABLE rrze_hub_univis (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     sUnivisID VARCHAR(255) NOT NULL UNIQUE, 
@@ -111,7 +96,7 @@ CREATE TABLE rrze_hub_person (
     sLastname VARCHAR(255) NOT NULL,
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) COMMENT '"@type": "Person"';
 
 
 CREATE TABLE rrze_hub_personDepartment (

@@ -108,6 +108,11 @@ class DBFunctions{
             $aRet = $aGroup; 
         }
 
+        // Test
+
+        $schema = new Schema();
+        $aRet = $schema->getSchema('person', $aRet);
+
         return $aRet;
     }
 
