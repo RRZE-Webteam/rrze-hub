@@ -159,6 +159,15 @@ class Sync{
 
             if (!empty($person['locations'])){
                 foreach ($person['locations'] as $location){
+
+                    $plz = empty($location['ort'])?'':(int) filter_var($location['ort'], FILTER_SANITIZE_NUMBER_INT);
+
+                    if ($plz){
+                        $city = trim(substr($location['ort'], strlen($plz)));
+                    }else{
+                        $city = empty($location['ort'])?'':$location['ort'];
+                    }
+
                     $prepare_vals = [
                         empty($location['office'])?'':$location['office'],
                         empty($location['email'])?'':$location['email'],
@@ -169,11 +178,13 @@ class Sync{
                         empty($location['mobile_call'])?'':$location['mobile_call'],
                         empty($location['url'])?'':$location['url'],
                         empty($location['street'])?'':$location['street'],
-                        empty($location['ort'])?'':$location['ort']
+                        $city,
+                        $plz,
+                        'Germany', // country
                     ];
 
                     // insert/update locations
-                    $wpdb->query($wpdb->prepare("CALL setLocation(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
+                    $wpdb->query($wpdb->prepare("CALL setLocation(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, @retID)", $prepare_vals));
                     if ($wpdb->last_error){
                         echo '$wpdb->last_query' . json_encode($wpdb->last_query) . '| $wpdb->last_error= ' . json_encode($wpdb->last_error);
                         exit;

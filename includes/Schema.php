@@ -27,8 +27,8 @@ class Schema {
             // '@context' => 'https://schema.org/address',
             '@type' => 'PostalAddress',
             'addressLocality' => 'city',
-            'addressCountry' => '', // => 2DO: DB Feld country DEFAULT 'Germany'
-            'postalCode' => '', //  => 2DO: bei Sync PLZ extrahieren und separat speichern (int) filter_var(FELDNAME, FILTER_SANITIZE_NUMBER_INT),
+            'addressCountry' => 'country',
+            'postalCode' => 'postalcode',
             'streetAddress' => 'street',
         ];
     

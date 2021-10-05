@@ -288,9 +288,11 @@ CREATE TABLE rrze_hub_location (
     sFax VARCHAR(50),
     sMobile VARCHAR(50),
     sMobileCall VARCHAR(50),
-    sUrl VARCHAR(50),
+    sUrl TEXT,
     sStreet VARCHAR(50),
+    sPostalCode VARCHAR(5),
     sCity VARCHAR(50),
+    sCountry VARCHAR(50),
     UNIQUE(sOffice, sEmail),
     tsInsert TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tsUpdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -385,18 +387,20 @@ CREATE OR REPLACE PROCEDURE setLocation (
     IN sFaxIN VARCHAR(50),
     IN sMobileIN VARCHAR(50),
     IN sMobileCallIN VARCHAR(50),
-    IN sUrlIN VARCHAR(50),
+    IN sUrlIN TEXT,
     IN sStreetIN VARCHAR(50),
     IN sCityIN VARCHAR(50),
+    IN sPostalCodeIN VARCHAR(5),
+    IN sCountryIN VARCHAR(50),
     OUT retID BIGINT
 )
 COMMENT 'return: rrze_hub_location.ID - Add/Update location'
 BEGIN
     START TRANSACTION;
-    INSERT INTO rrze_hub_location (sOffice, sEmail, sTel, sTelCall, sFax, sMobile, sMobileCall, sUrl, sStreet, sCity) VALUES (sOfficeIN, sEmailIN, sTelIN, sTelCallIN, sFaxIN, sMobileIN, sMobileCallIN, sUrlIN, sStreetIN, sCityIN)
-    ON DUPLICATE KEY UPDATE sTel = sTelIN, sTelCall = sTelCallIN, sFax = sFaxIN, sMobile = sMobileIN, sMobileCall = sMobileCallIN, sUrl = sUrlIN, sStreet = sStreetIN, sCity = sCityIN;
+    INSERT INTO rrze_hub_location (sOffice, sEmail, sTel, sTelCall, sFax, sMobile, sMobileCall, sUrl, sStreet, sCity, sPostalCode, sCountry) VALUES (sOfficeIN, sEmailIN, sTelIN, sTelCallIN, sFaxIN, sMobileIN, sMobileCallIN, sUrlIN, sStreetIN, sCityIN, sPostalCodeIN, sCountryIN)
+    ON DUPLICATE KEY UPDATE sTel = sTelIN, sTelCall = sTelCallIN, sFax = sFaxIN, sMobile = sMobileIN, sMobileCall = sMobileCallIN, sUrl = sUrlIN, sStreet = sStreetIN, sCity = sCityIN, sPostalCode = sPostalCodeIN, sCountry = sCountryIN;
     COMMIT;
-    SELECT ID INTO retID FROM rrze_hub_location WHERE sOffice = sOfficeIN AND sEmail = sEmailIN AND sTel = sTelIN AND sTelCall = sTelCallIN AND sFax = sFaxIN AND sMobile = sMobileIN AND sMobileCall = sMobileCallIN AND sUrl = sUrlIN AND sStreet = sStreetIN AND sCity = sCityIN;
+    SELECT ID INTO retID FROM rrze_hub_location WHERE sOffice = sOfficeIN AND sEmail = sEmailIN AND sTel = sTelIN AND sTelCall = sTelCallIN AND sFax = sFaxIN AND sMobile = sMobileIN AND sMobileCall = sMobileCallIN AND sUrl = sUrlIN AND sStreet = sStreetIN AND sCity = sCityIN AND sPostalCode = sPostalCodeIN AND sCountry = sCountryIN;
     IF retID <= 0 THEN
         ROLLBACK;
     END IF; 
@@ -794,8 +798,10 @@ CREATE OR REPLACE VIEW getPerson AS
         loc.ID AS locationID,
         loc.sOffice AS office,
         loc.sEmail AS email,
-        loc.sCity AS city,
         loc.sStreet AS street,
+        loc.sPostalCode AS postalcode,
+        loc.sCity AS city,
+        loc.sCountry AS country,
         loc.sTel AS tel,
         loc.sTelCall AS tel_call,
         loc.sMobile AS mobile,
@@ -833,7 +839,9 @@ CREATE OR REPLACE VIEW getPerson AS
             l.ID,
             l.sOffice,
             l.sEmail,
+            l.sPostalCode,
             l.sCity,
+            l.sCountry,
             l.sStreet,
             l.sTel,
             l.sTelCall,

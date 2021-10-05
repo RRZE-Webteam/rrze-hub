@@ -73,7 +73,9 @@ class DBFunctions{
                     'mobile_call' => $row['mobile_call'],
                     'fax' => $row['fax'],
                     'street' => $row['street'],
+                    'postalcode' => $row['postalcode'],
                     'city' => $row['city'],
+                    'country' => $row['country'],
                     'office' => $row['office']
                 ];
                 $aRet[$row['ID']]['locations'] = $aLocations[$row['ID']];
