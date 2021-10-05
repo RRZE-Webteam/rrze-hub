@@ -48,6 +48,7 @@ class DBFunctions{
         $aLocations = [];
         $aOfficehours = [];
         $aGroup = [];
+        $schema = new Schema();
 
         foreach ($rows as $row) {
             $aRet[$row['ID']] = [
@@ -59,7 +60,8 @@ class DBFunctions{
                 'lastname' => $row['lastname'],
                 'organization' => $row['organization'],
                 'department' => $row['department'],
-                'letter' => $row['letter']
+                'letter' => $row['letter'],
+                'schema' => $schema->getSchema('person', $row),
             ];
 
             if (!(empty($row['email']) && empty($row['tel']) && empty($row['mobile']) && empty($row['street']) && empty($row['city']) && empty($row['office']))) {
@@ -109,8 +111,8 @@ class DBFunctions{
         }
 
         // Test
-        $schema = new Schema();
-        $aRet = $schema->getSchema('person', $aRet);
+        // $schema = new Schema();
+        // $aRet = $schema->getSchema('person', $aRet);
 
         return $aRet;
     }

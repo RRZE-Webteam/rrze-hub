@@ -26,10 +26,10 @@ class Schema {
         $this->address = [
             // '@context' => 'https://schema.org/address',
             '@type' => 'PostalAddress',
-            'addressLocality' => '',
-            'addressCountry' => '',
-            'postalCode' => '',
-            'streetAddress' => '',
+            'addressLocality' => 'city',
+            'addressCountry' => '', // => 2DO: DB Feld country DEFAULT 'Germany'
+            'postalCode' => '', //  => 2DO: bei Sync PLZ extrahieren und separat speichern (int) filter_var(FELDNAME, FILTER_SANITIZE_NUMBER_INT),
+            'streetAddress' => 'street',
         ];
     
         $this->person = [
@@ -39,9 +39,9 @@ class Schema {
             'jobTitle' => 'title_long',
             'worksFor' => $this->organization,
             'address' => $this->address,
-            'email' => '',
-            'telephone' => '',
-            'url' => '',
+            'email' => 'email',
+            'telephone' => 'tel',
+            'url' => 'url',
         ];
     }
 
@@ -62,74 +62,35 @@ class Schema {
         global $wpdb;
         $aRet = ['@context' => 'https://schema.org/'];
 
-        // Testdata:
-        $aIn = [
-            '123' =>
-            [
-              "person_id" => "123456",
-              "title" => "Dr.",
-              "title_long" => "Doktor",
-              "atitle" => "",
-              "firstname"  => "Fred",
-              "lastname" => "Astaire",
-              "organization"  => "Department der Albernheit",
-              "department"  => "Lehrstuhl für Digitalen Tanz",
-              "letter"  => "G",
-              "locations" => [
-                  '670' =>[
-                  "email" => "fred.astaire@unknownwebsite.tld",
-                  "tel" => "+49 9131 85-123456789",
-                  "tel_call" => "+49913185123456789",
-                  "mobile" => "",
-                  "mobile_call" => "",
-                  "fax" => "+49 9131 85-987654",
-                  "street" => "Road to nowhere 11",
-                  "city" => "91058 Erlangen",
-                  "office" => "01.222-999",
-                  ],
-                ],
-              "officehours" => [
-                    '24'=> [                  
-                        "repeat" => "Di",
-                        "starttime" => "14:00",
-                        "endtime" => "16:00",
-                        "office" => "01.116-128",
-                        "comment" => "Bring cookies",
-                    ]
-                  ]
-            ]];
-
         if (property_exists("\\RRZE\Hub\\Schema", $sType) === FALSE){
             return json_encode(['Error' => "Unknown schema for type '$sType'"]);
         }
 
         $aSchema = $this->$sType;
-        $aRet = ['@type' => $aSchema['@type']];
+        $aRet = [
+            '@context' => 'https://schema.org/',
+            '@type' => $aSchema['@type']
+        ];
 
-        foreach ($aIn as $ID => $aEntry) {
-            foreach ($aEntry as $keyIn => $valIn) {
+        foreach ($aIn as $keyIn => $valIn) {
+            // this would work if schema's keys were unique but the are not (f.e. name in Person and name in Department and name in Organization)
+            // if (self::in_array_multi($field, $aSchema)) {
+            //     $aRet[$field] = $value;
+            // }
 
-                // this would work if schema's keys were unique but the are not (f.e. name in Person and name in Department and name in Organization)
-                // if (self::in_array_multi($field, $aSchema)) {
-                //     $aRet[$field] = $value;
-                // }
-
-                // 2DO: who to make locations fit? does Schema provide more than one email,phone,fax for Person?
-
-                // this works perfectly:
-                foreach($aSchema as $keySchema => $valSchema){
-                    if (is_array($valSchema)){
-                        foreach ($valSchema as $keySchemaSub => $valSchemaSub){
-                            if ($keyIn == $keySchemaSub){
-                                $aRet[$keySchema][$keySchemaSub] = $valIn;
-                            }elseif ($keyIn == $valSchemaSub){
-                                $aRet[$keySchema][$keySchemaSub] = $valIn;
-                            }
+            // this works perfectly (https://validator.schema.org/ verified as VALID, 0 bugs, 0 warnings \o/ :
+            foreach($aSchema as $keySchema => $valSchema){
+                if (is_array($valSchema)){
+                    foreach ($valSchema as $keySchemaSub => $valSchemaSub){
+                        if ($keyIn == $keySchemaSub){
+                            $aRet[$keySchema][$keySchemaSub] = $valIn;
+                        }elseif ($keyIn == $valSchemaSub){
+                            $aRet[$keySchema][$keySchemaSub] = $valIn;
                         }
-                    }else{
-                        if ($keyIn == $valSchema){
-                            $aRet[$keySchema] = $valIn;
-                        }
+                    }
+                }else{
+                    if ($keyIn == $valSchema){
+                        $aRet[$keySchema] = $valIn;
                     }
                 }
             }
