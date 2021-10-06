@@ -107,8 +107,10 @@ class Sync{
 
         $data = '';
         $univis = new UnivISAPI($this->UnivISURL, $sUnivisID, $this->atts);
-        // $data = $univis->getData('personAll', NULL); // falsch! personByOrga liefert alle Personen
-        $data = $univis->getData('personByOrga', NULL);
+        $data = $univis->getData('personAll', NULL);
+        // $data = $univis->getData('personByOrga', NULL); 
+        // personAll => http://univis.uni-erlangen.de/prg?search=persons&department=420103&show=long => liefert nicht alle Personen bei 100100 - warum nicht?
+        // personByOrga => http://univis.uni-erlangen.de/prg?search=departments&number=420103&show=long => liefert weder position noch position_order
 
         $aUsedIDs = [];
 
@@ -239,6 +241,14 @@ class Sync{
 
             if (!empty($person['positions'])){
                 foreach ($person['positions'] as $position){
+
+
+                    // Test
+                    // if (!empty($position['name'])){
+                    //     echo 'jepp';
+                    //     exit;
+                    // }
+
                     $prepare_vals = [
                         empty($position['name'])?'':$position['name'],
                     ];
