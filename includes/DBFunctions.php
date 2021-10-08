@@ -51,6 +51,8 @@ class DBFunctions{
         $schema = new Schema();
 
         foreach ($rows as $row) {
+            // var_dump($row);
+            // exit;
             $aRet[$row['ID']] = [
                 'person_id' => $row['person_id'],
                 'title' => $row['title'],
@@ -92,6 +94,9 @@ class DBFunctions{
                 $aRet[$row['ID']]['officehours'] = $aOfficehours[$row['ID']];
             }
 
+            // $aRet[$row['ID']]['schema'] = $schema->getSchema('person', $row['ID']);
+
+
             if (!empty($aAtts['groupBy'])){
                 if ($aAtts['groupBy'] != 'position'){
                     $aGroup[$row[$aAtts['groupBy']]][$row['ID']] = $aRet[$row['ID']]; 
@@ -111,6 +116,7 @@ class DBFunctions{
             }
             $aRet = $aGroup; 
         }
+
 
         // Test
         // $schema = new Schema();

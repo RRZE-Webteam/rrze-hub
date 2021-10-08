@@ -33,6 +33,20 @@ class Sync{
     }
 
     public function doSync($options) {
+
+
+        // // Test:
+        // $aTest = [
+        //     'filterBy' => 'person_id',
+        //     'filterValue' => '40014582',
+        // ];
+        // $testhub = new DBFunctions($aTest);
+        // $testdata = $testhub->getPerson($aTest);
+        // echo '<pre>';
+        // var_dump($testdata);
+        // exit;
+
+
         if (!empty($options['sync_univisIDs'])){
             $aUnivisIDs = explode("\n", $options['sync_univisIDs']);
             foreach($aUnivisIDs as $sUnivisID){
@@ -76,6 +90,7 @@ class Sync{
     public function storePerson($person){
         global $wpdb;
 
+        // BK 08.10.2021 : NULL anstelle von '' wäre sinnvoll, um auf IS (NOT) NULL in den views zu prüfen, wird aber nicht für $wp->prepare() unterstützt, nur für ->insert(), ->update() und ->replace() und ->delete() - siehe https://wordpress.stackexchange.com/questions/143405/wpdb-wont-insert-null-into-table-column#143418
         $prepare_vals = [
             empty($person['key'])?'':$person['key'],
             empty($person['person_id'])?'':$person['person_id'],

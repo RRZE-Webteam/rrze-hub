@@ -31,12 +31,16 @@ class Schema {
             'postalCode' => 'postalcode',
             'streetAddress' => 'street',
         ];
-    
+
         $this->person = [
             // '@context' => 'https://schema.org/', // not https://schema.org/person !
             '@type' => 'Person',
-            'name' => '', // firstname blank lastname
-            'jobTitle' => 'title_long',
+            'name' => 'schema_name',
+            'honorificPrefix' => 'title',
+            'honorificSuffix' => 'atitle',
+            'givenName' => 'firstname',
+            'familyName' => 'lastname',
+            'jobTitle' => 'work',
             'worksFor' => $this->organization,
             'address' => $this->address,
             'email' => 'email',
@@ -59,7 +63,6 @@ class Schema {
     }
 
     public function getSchema($sType, $aIn) {
-        global $wpdb;
         $aRet = ['@context' => 'https://schema.org/'];
 
         if (property_exists("\\RRZE\Hub\\Schema", $sType) === FALSE){
@@ -96,6 +99,6 @@ class Schema {
             }
         }
 
-        return json_encode($aRet);
+        return '<script type="application/ld+json">' . json_encode($aRet) . '</script>';
     }
 }

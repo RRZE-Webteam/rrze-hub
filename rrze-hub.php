@@ -4,7 +4,7 @@
 Plugin Name:     RRZE Hub
 Plugin URI:      https://gitlab.rrze.fau.de/rrze-webteam/rrze-hub
 Description:     RRZE-Hub - one hub to rule them all.
-Version:         0.4.10
+Version:         0.4.11
 Author:          RRZE Webteam
 Author URI:      https://blogs.fau.de/webworking/
 License:         GNU General Public License v2

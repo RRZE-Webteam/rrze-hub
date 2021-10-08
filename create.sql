@@ -787,6 +787,7 @@ CREATE OR REPLACE VIEW getPerson AS
         p.sTitleLong AS title_long,
         p.sAtitle AS atitle,
         CONCAT(p.sLastname, ',', p.sFirstname) AS 'name',
+        CONCAT(IF(p.sTitle != '', CONCAT(p.sTitle, ' '), ''), p.sFirstname, ' ', p.sLastname, IF(p.sAtitle != '', CONCAT(', ', p.sAtitle), '')) AS 'schema_name',
         p.sFirstname AS firstname,
         p.sLastname AS lastname,
         orga.organization,
