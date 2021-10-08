@@ -63,7 +63,7 @@ class DBFunctions{
                 'organization' => $row['organization'],
                 'department' => $row['department'],
                 'letter' => $row['letter'],
-                'schema' => $schema->getSchema('person', $row),
+                // 'schema' => $schema->getSchema('person', $row),
             ];
 
             if (!(empty($row['email']) && empty($row['tel']) && empty($row['mobile']) && empty($row['street']) && empty($row['city']) && empty($row['office']))) {
@@ -94,9 +94,6 @@ class DBFunctions{
                 $aRet[$row['ID']]['officehours'] = $aOfficehours[$row['ID']];
             }
 
-            // $aRet[$row['ID']]['schema'] = $schema->getSchema('person', $row['ID']);
-
-
             if (!empty($aAtts['groupBy'])){
                 if ($aAtts['groupBy'] != 'position'){
                     $aGroup[$row[$aAtts['groupBy']]][$row['ID']] = $aRet[$row['ID']]; 
@@ -110,6 +107,12 @@ class DBFunctions{
             }
         }
 
+        echo '<pre>';
+        $test = $schema->getSchema('person', $aRet);
+        var_dump($test);
+        exit;
+
+
         if (!empty($aAtts['groupBy'])){
             if ($aAtts['groupBy'] != 'position') {
                 ksort($aGroup, SORT_NATURAL);
@@ -117,6 +120,9 @@ class DBFunctions{
             $aRet = $aGroup; 
         }
 
+        // echo '<pre>';
+        // var_dump($aRet);
+        // exit;
 
         // Test
         // $schema = new Schema();

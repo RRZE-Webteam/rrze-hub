@@ -35,16 +35,16 @@ class Sync{
     public function doSync($options) {
 
 
-        // // Test:
-        // $aTest = [
-        //     'filterBy' => 'person_id',
-        //     'filterValue' => '40014582',
-        // ];
-        // $testhub = new DBFunctions($aTest);
-        // $testdata = $testhub->getPerson($aTest);
-        // echo '<pre>';
-        // var_dump($testdata);
-        // exit;
+        // Test:
+        $aTest = [
+            'filterBy' => 'person_id',
+            'filterValue' => '40014582',
+        ];
+        $testhub = new DBFunctions($aTest);
+        $testdata = $testhub->getPerson($aTest);
+        echo '<pre>';
+        var_dump($testdata);
+        exit;
 
 
         if (!empty($options['sync_univisIDs'])){
