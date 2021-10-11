@@ -10,6 +10,12 @@ if (!function_exists('__')){
     }
 }
 
+if (!function_exists('str_contains')) {
+    function str_contains($haystack, $needle) {
+        return $needle !== '' && mb_strpos($haystack, $needle) !== false;
+    }
+}
+
 
 class UnivISAPI {
 
@@ -23,7 +29,8 @@ class UnivISAPI {
     protected $sem;
 
 
-    public function __construct($api, $orgID, $atts) {
+    public function __construct(string $api, string $orgID, array $atts) 
+    {
         $this->setAPI($api);
         $this->orgID = $orgID;
         $this->atts = $atts;
@@ -31,16 +38,19 @@ class UnivISAPI {
         $this->showJobs = (!empty($this->atts['zeige_jobs']) ? explode('|', $this->atts['zeige_jobs']) : []);
         $this->hideJobs = (!empty($this->atts['ignoriere_jobs']) ? explode('|', $this->atts['ignoriere_jobs']) : []);
         $this->isHub = (!empty($this->atts['isHub']) ? $this->atts['isHub'] : FALSE);
+
     }
 
 
-    private function setAPI($api){
+    private function setAPI(string $api)
+    {
         // make sure we use https://DOMAIN/prg?search= no matter what input was made
         $this->api = preg_replace('/^((http|https):\/\/)?([^?\/]*)([\/?]*)/i', 'https://$3/prg?show=json&search=', $api, 1);
     }
 
 
-    private static function log(string $method, string $logType = 'error', string $msg = ''){
+    private static function log(string $method, string $logType = 'error', string $msg = '')
+    {
         // uses plugin rrze-log
         $pre = __NAMESPACE__ . ' ' . $method . '() : ';
         if ($logType == 'DB'){
@@ -52,7 +62,12 @@ class UnivISAPI {
     }
 
 
-    public function getData($dataType, $univisParam = NULL){
+    // we cannot use type declaration mixed because it is PHP 8
+    // public function getData(string $dataType, string $univisParam = NULL): mixed
+    // we cannot use union type as type declaration because it is PHP 8
+    // public function getData(string $dataType, string $univisParam = NULL): bool|array
+    public function getData(string $dataType, string $univisParam = NULL)
+    {
         $this->univisParam = urlencode($univisParam);
         $url = $this->getUrl($dataType) . $this->univisParam;
 
@@ -60,11 +75,16 @@ class UnivISAPI {
             return 'Set UnivIS Org ID in settings.';
         }
         $data = file_get_contents($url);
-        if (!$data){
+
+        if (!$data || str_contains($data, 'keine passenden Daten')){
             UnivISAPI::log('getData', 'error', "no data returned using $url");
             return FALSE;
         }
+
         $data = json_decode( $data, true);
+        // echo '<pre>';
+        // var_dump($data);
+        // exit;
         $data = $this->mapIt($dataType, $data);
         $data = $this->dict($data);
         if (!$this->isHub){
@@ -74,7 +94,8 @@ class UnivISAPI {
     }
 
 
-    private function getUrl($dataType){
+    private function getUrl(string $dataType): string 
+    {
         $url = $this->api;
         switch($dataType){
             case 'personByID':
@@ -155,7 +176,8 @@ class UnivISAPI {
 
 
 
-    public function getMap($dataType){
+    public function getMap(string $dataType): array 
+    {
         $map = [];
 
         switch($dataType){
@@ -332,7 +354,8 @@ class UnivISAPI {
         return $map;
     }
 
-    public function showPosition($position){
+    public function showPosition(string $position): bool
+    {
         // show is given => show matches only 
         if (!empty($this->showJobs) && !in_array($position, $this->showJobs)){
             return FALSE;
@@ -344,7 +367,8 @@ class UnivISAPI {
         return TRUE;
     }
 
-    public function mapIt($dataType, &$data){
+    public function mapIt(string $dataType, array &$data): array
+    {
         $map = $this->getMap($dataType);
 
         if (empty($map)){
@@ -540,7 +564,8 @@ class UnivISAPI {
 
     
     
-    public function sortGroup($dataType, &$data){
+    public function sortGroup(string $dataType, array &$data): array 
+    {
         if (empty($data)){
             return [];
         }
@@ -621,7 +646,8 @@ class UnivISAPI {
     }
 
 
-    private function groupBy($arr, $key) {
+    private function groupBy(array $arr, string $key): array 
+    {
         $ret = [];
         foreach($arr as $val) {
             if (!empty($val[$key])){
@@ -631,30 +657,38 @@ class UnivISAPI {
         return $ret;
     }
 
-    private function sortByLastname($a, $b){
+    // we cannot use type declaration mixed because it is PHP 8
+    // private function sortByLastname(mixed $a, mixed $b): int 
+    private function sortByLastname($a, $b): int 
+    {
         return strcasecmp($a["lastname"], $b["lastname"]);
     }
 
-    private function sortByName($a, $b){
+    private function sortByName($a, $b): int
+    {
         return strcasecmp($a["name"], $b["name"]);
     }
 
-    private function sortByYear($a, $b){
+    private function sortByYear($a, $b): int
+    {
         return strcasecmp($b["year"], $a["year"]);
     }
 
-    private function sortByPositionorder($a, $b){
+    private function sortByPositionorder($a, $b): int
+    {
         if (empty($a["orga_position_order"]) || empty($b["orga_position_order"])){
             return TRUE;
         }
         return strnatcmp($a["orga_position_order"], $b["orga_position_order"]);
     }
 
-    public static function checkSemester($sem){
+    public static function checkSemester(string $sem): int
+    {
         return preg_match('/[12]\d{3}[ws]/', $sem);
     }
 
-    public static function correctPhone($phone){
+    public static function correctPhone(string $phone): string 
+    {
         if ((strpos($phone, '+49 9131 85-') !== 0) && (strpos($phone, '+49 911 5302-') !== 0)) {
             if (!preg_match('/\+49 [1-9][0-9]{1,4} [1-9][0-9]+/', $phone)) {
                 $phone_data = preg_replace('/\D/', '', $phone);
@@ -720,13 +754,15 @@ class UnivISAPI {
         return $phone;
     }
 
-    public function getInt($str){
+    public function getInt(string $str): string 
+    {
         preg_match_all('/\d+/', $str, $matches);
         return implode('', $matches[0]);
     }
 
 
-    public function formatUnivIS( $txt ){
+    public function formatUnivIS(string $txt): string 
+    {
         $subs = array(
             '/^\-+\s+(.*)?/mi' => '<ul><li>$1</li></ul>',  // list 
             '/(<\/ul>\n(.*)<ul>*)+/' => '',  // list 
@@ -746,7 +782,8 @@ class UnivISAPI {
         return $txt;
     }
 
-    private function dict(&$data){
+    private function dict(array &$data): array 
+    {
         $fields = [
             'title' => [
                 "Dr." => __('Doktor', 'rrze-univis'),

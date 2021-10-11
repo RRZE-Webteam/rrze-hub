@@ -32,20 +32,20 @@ class Sync{
         add_filter( 'pre_update_option_rrze-hub',  [$this, 'doSync'], 10, 1 );
     }
 
-    public function doSync($options) {
+    public function doSync(array $options): array 
+    {
 
 
-        // Test:
-        $aTest = [
-            'filterBy' => 'person_id',
-            'filterValue' => '40014582',
-        ];
-        $testhub = new DBFunctions($aTest);
-        $testdata = $testhub->getPerson($aTest);
-        echo '<pre>';
-        var_dump($testdata);
-        exit;
-
+        // // Test:
+        // $aTest = [
+        //     'filterBy' => 'person_id',
+        //     'filterValue' => '40014582',
+        // ];
+        // $testhub = new DBFunctions($aTest);
+        // $testdata = $testhub->getPerson($aTest);
+        // echo '<pre>';
+        // var_dump($testdata);
+        // exit;
 
         if (!empty($options['sync_univisIDs'])){
             $aUnivisIDs = explode("\n", $options['sync_univisIDs']);
@@ -71,7 +71,8 @@ class Sync{
         return $options;
     }
 
-    public function getUnivisID($sUnivisID){
+    public function getUnivisID(string $sUnivisID): int  
+    {
         global $wpdb;
 
         // insert/update univis
@@ -87,7 +88,8 @@ class Sync{
     }
 
 
-    public function storePerson($person){
+    public function storePerson(array $person): int 
+    {
         global $wpdb;
 
         // BK 08.10.2021 : NULL anstelle von '' wäre sinnvoll, um auf IS (NOT) NULL in den views zu prüfen, wird aber nicht für $wp->prepare() unterstützt, nur für ->insert(), ->update() und ->replace() und ->delete() - siehe https://wordpress.stackexchange.com/questions/143405/wpdb-wont-insert-null-into-table-column#143418
@@ -112,7 +114,8 @@ class Sync{
     }
 
 
-    public function syncPersons($sUnivisID, $uID) {
+    public function syncPersons(string $sUnivisID, int $uID): array 
+    {
         global $wpdb;
 
         $aCnt = [
@@ -318,7 +321,8 @@ class Sync{
     }
 
 
-    public function syncLectures($sUnivisID, $uID) {
+    public function syncLectures(string $sUnivisID, int $uID): array 
+    {
         global $wpdb;
 
         $aCnt = [

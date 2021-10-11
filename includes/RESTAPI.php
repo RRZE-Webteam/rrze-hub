@@ -48,7 +48,8 @@ class RESTAPI {
         }
     }
 
-    public function getRouteArgs($endpoint){
+    public function getRouteArgs(string $endpoint): array 
+    {
         $aRet = [
             'univisID' => [
                 'sID' => [
@@ -120,7 +121,8 @@ class RESTAPI {
         return $aRet[$endpoint];
     }
 
-    public function isNewUnivisID($sID){
+    public function isNewUnivisID(string $sID): bool
+    {
         global $wpdb;
 
         $ID = $wpdb->get_var($wpdb->prepare("SELECT ID FROM rrze_hub_univis WHERE sUnivisID = %s", $sID));
@@ -134,7 +136,7 @@ class RESTAPI {
 
 
 
-    public function setUnivisID($sID){
+    public function setUnivisID(string $sID){
         // check if $sID is not already stored in db
         if ($this->isNewUnivisID($sID)) {
             // check if $sID returns valid info 
@@ -143,7 +145,8 @@ class RESTAPI {
     }
 
 
-    public function getPerson($args){
+    public function getPerson(array $args): mixed 
+    {
         $this->dbfuncs = new DBFunctions($args);
         $data = $this->dbfuncs->getPerson($args);
         $data = rest_ensure_response($data);
@@ -151,7 +154,8 @@ class RESTAPI {
         return $data;
     }
 
-    public function getLecture($args){
+    public function getLecture(array $args): mixed
+    {
         $this->dbfuncs = new DBFunctions($args);
         $data = $this->dbfuncs->getLecture($args);
         $data = rest_ensure_response($data);
@@ -159,13 +163,13 @@ class RESTAPI {
         return $data;
     }
 
-    public function valStr($value, $request, $param){
+    public function valStr(mixed $value, WP_REST_Request $request, string $param){
         if (!is_string($value)) {
             return new WP_Error('rest_invalid_param', $param . ' ' . __('must be a string.', 'rrze-hub'), ['status' => 400]);
         }
     }
 
-    public function valArr($value, $request, $param){
+    public function valArr(mixed $value, WP_REST_Request $request, string $param){
         if (!is_array(json_decode($value))) {
             return new WP_Error('rest_invalid_param', $param . ' ' . __('must be an URL encoded array.', 'rrze-hub'), ['status' => 400]);
         }

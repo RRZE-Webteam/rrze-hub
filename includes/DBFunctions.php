@@ -9,17 +9,20 @@ class DBFunctions{
     protected $showPositon;
     protected $hidePositon;
 
-    public function __construct($atts) {
+    public function __construct(array $atts) 
+    {
         // $this->sem = (!empty($atts['sem']) && self::checkSemester($atts['sem']) ? $atts['sem'] : '');
         $this->showPositon = (!empty($atts['show_jobs']) ? explode('|', $atts['show_jobs']) : []);
         $this->hidePositon = (!empty($atts['ignore_jobs']) ? explode('|', $atts['ignore_jobs']) : []);
     }
 
 
-    public function onLoaded() {
+    public function onLoaded() 
+    {
     }
 
-    public function showPosition($position){
+    public function showPosition(string $position): bool
+    {
         // show is given => show matches only 
         if (!empty($this->showPositon) && !in_array($position, $this->showPositon)){
             return FALSE;
@@ -31,7 +34,8 @@ class DBFunctions{
         return TRUE;
     }
 
-    public function getPerson($aAtts){
+    public function getPerson(array $aAtts): array
+    {
         global $wpdb;
         $aRet = [];
 
@@ -107,10 +111,10 @@ class DBFunctions{
             }
         }
 
-        echo '<pre>';
-        $test = $schema->getSchema('person', $aRet);
-        var_dump($test);
-        exit;
+        // echo '<pre>';
+        // $test = $schema->getSchema('person', $aRet);
+        // var_dump($test);
+        // exit;
 
 
         if (!empty($aAtts['groupBy'])){
@@ -132,7 +136,8 @@ class DBFunctions{
     }
 
 
-    public function getLecture($aAtts){
+    public function getLecture(array $aAtts): array
+    {
         global $wpdb;
         $aRet = [];
 
