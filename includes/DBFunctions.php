@@ -17,8 +17,7 @@ class DBFunctions{
     }
 
 
-    public function onLoaded() 
-    {
+    public function onLoaded(){
     }
 
     public function showPosition(string $position): bool
@@ -55,6 +54,7 @@ class DBFunctions{
         $schema = new Schema();
 
         foreach ($rows as $row) {
+            // echo '<pre>';
             // var_dump($row);
             // exit;
             $aRet[$row['ID']] = [
@@ -66,8 +66,7 @@ class DBFunctions{
                 'lastname' => $row['lastname'],
                 'organization' => $row['organization'],
                 'department' => $row['department'],
-                'letter' => $row['letter'],
-                // 'schema' => $schema->getSchema('person', $row),
+                'letter' => $row['letter']
             ];
 
             if (!(empty($row['email']) && empty($row['tel']) && empty($row['mobile']) && empty($row['street']) && empty($row['city']) && empty($row['office']))) {
@@ -98,20 +97,25 @@ class DBFunctions{
                 $aRet[$row['ID']]['officehours'] = $aOfficehours[$row['ID']];
             }
 
-            if (!empty($aAtts['groupBy'])){
-                if ($aAtts['groupBy'] != 'position'){
-                    $aGroup[$row[$aAtts['groupBy']]][$row['ID']] = $aRet[$row['ID']]; 
-                }elseif ($this->showPosition($row['position'])){
-                    // mitarbeiter-alle (das ist historisch bedingt die Organisationsübersicht s. https://www.wordpress.rrze.fau.de/plugins/fau-und-rrze-plugins/rrze-univis/organisationsdaten-einbinden/ )
-                    if (!empty($row[$aAtts['groupBy']])){
-                        // exclude persons that have no position
-                        $aGroup[$row[$aAtts['groupBy']]][$row['ID']] = $aRet[$row['ID']]; 
-                    }
-                }
-            }
+            // // nur testweise auskommentiert
+            // if (!empty($aAtts['groupBy'])){
+            //     if ($aAtts['groupBy'] != 'position'){
+            //         $aGroup[$row[$aAtts['groupBy']]][$row['ID']] = $aRet[$row['ID']]; 
+            //     }elseif ($this->showPosition($row['position'])){
+            //         // mitarbeiter-alle (das ist historisch bedingt die Organisationsübersicht s. https://www.wordpress.rrze.fau.de/plugins/fau-und-rrze-plugins/rrze-univis/organisationsdaten-einbinden/ )
+            //         if (!empty($row[$aAtts['groupBy']])){
+            //             // exclude persons that have no position
+            //             $aGroup[$row[$aAtts['groupBy']]][$row['ID']] = $aRet[$row['ID']]; 
+            //         }
+            //     }
+            // }
         }
 
         // echo '<pre>';
+        // echo '$aRet = <br>';
+        // var_dump($aRet);
+
+        // echo '<br><br>Schema:<br>';
         // $test = $schema->getSchema('person', $aRet);
         // var_dump($test);
         // exit;

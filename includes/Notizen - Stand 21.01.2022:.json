@@ -1,0 +1,154 @@
+Notizen - Stand 21.01.2022:
+
+Personen können auch Sprechstunden haben.
+
+Sprechstunden können aber die Form "jeden Monat am 1. Do 15:00 - 16:00, Raum VC, Webmaster-Sprechstunde" haben.
+
+"@type": "OpeningHoursSpecification"
+
+funktioniert nicht, weil hoursAvailable / OpeningHoursSpecification kein Attribut repeatFrequency enthalten kann
+
+repeatFrequency ist nur in Schedule enhalten
+
+Schedule ist nur in Event enhalten
+
+Versuch, Sprechstunde an contactPoint hängen:
+
+=> liefert keinen Fehler im [Validator](https://validator.schema.org/) !
+
+```json
+{
+    "@context":"https://schema.org/",
+    "@graph":[
+        {
+            "@id":"https://fau.de/123456",
+            "@type": "Event",
+            "eventSchedule": {
+                "@type": "Schedule",
+                "repeatFrequency": "P1M",
+                "byDay": "1TH",
+                "startTime": "15:00:00",
+                "endTime": "16:00:00",
+                "scheduleTimezone": "Europe/Berlin"
+             }
+        },
+    {
+    "@type":"Person",
+    "identifier":"hier_die_UnivIS-ID",
+    "name":"Dipl.-Inf. Wolfgang Wiese, Akad. ORat",
+    "honorificPrefix":"Dipl.-Inf.",
+    "honorificSuffix":"Akad. ORat",
+    "givenName":["Wolfgang"],
+    "familyName":"Wiese",
+    "telephone": [
+        "+49 9131 85-28326",
+        "+49 9131 85-28135"
+    ],
+    "email":[
+        "wolfgang.wiese@fau.de",
+        "test+wolfgang.wiese@fau.de"
+    ],
+    "faxNumber":[
+        "+49 9131 302941"
+    ],
+    "worksFor":
+        {
+            "@type":"CollegeOrUniversity",
+            "name":"Friedrich-Alexander-Universit&auml;t (FAU)",
+            "url":"https://www.fau.de/",
+            "department":{
+	            "@type":"Organization",
+                "name":"Regionales Rechenzentrum Erlangen (RRZE)",
+		        "member":{
+                    "@type": "OrganizationRole",
+                    "namedPosition":[
+                        "Webmaster", 
+                        "UnivIS-Beauftragte"
+                    ]
+                },
+                "department":{
+	                "@type":"Organization",
+	                "name":"Abteilung Ausbildung &amp; Information (RRZE)",
+		            "member":{
+                        "@type": "OrganizationRole",
+                    	"namedPosition":[
+                            "Leitung", 
+                            "Webmaster", 
+                            "UnivIS-Beauftragte"
+                        ]
+                    },
+                    "contactPoint":[
+                        {
+                            "@type": "ContactPoint",
+                            "contactType":"Testeintrag, nicht kommen :)",
+                            "hoursAvailable": 
+                                {
+                                    "@type": "OpeningHoursSpecification", // "Mi 9:30 - 10:30, Raum 1.018, Testeintrag, nicht kommen :)"
+                                    "dayOfWeek": "http://schema.org/Wednesday",
+                                    "opens":  "09:30:00",
+                                    "closes":  "11:00:00",
+                                    "name":"Raum 1.018"
+                                }
+                        },
+                        {
+                            "@type": "ContactPoint",
+                            "contactType":"Testeintrag, nicht kommen :)",
+                            "hoursAvailable": 
+                                {
+                                    "@type": "OpeningHoursSpecification", // "bis 1.4.2022 : Mi 9:30 - 10:30, Raum 1.018, Testeintrag, nicht kommen :)"
+                                    "dayOfWeek": "http://schema.org/Wednesday",
+                                    "validThrough": "2022-04-01",
+                                    "opens":  "09:30:00",
+                                    "closes":  "11:00:00",
+                                    "name":"Raum 1.018"
+                                }
+                        },
+                        {
+                            "@type": "ContactPoint",
+                            "contactType":"Sprechstunde",
+                            "@id":"https://fau.de/123456"
+                        }
+                    ],
+                    "location": {
+                        "@type": "Place",
+                        "address":
+                            {
+                            "@type":"PostalAddress",
+                            "addressLocality":"Erlangen, Deutschland",
+                            "postalCode":"91058",
+                            "streetAddress":"Martensstraße 1"         
+                            },
+                        "name": "Raum 1.024"
+                        },
+                    "url":"https://www.rrze.fau.de/"
+                }
+            }
+        }
+    }
+
+
+    ]
+  }
+```
+
+=> ohne Verwendung von @graph und insbesondere @id (also direkt eingebettet als 
+
+"@type": "Event",
+"eventSchedule": {
+    "@type": "Schedule",
+    "repeatFrequency": "P1M",
+    "byDay": "1TH",
+    "startTime": "15:00:00",
+    "endTime": "16:00:00",
+    "scheduleTimezone": "Europe/Berlin"
+ }
+
+würde es nicht funktionieren, da dann Fehler "doppelt vorhandener Schlüssel"
+
+=> 2DO: 
+1. sinnvolle, generierbare @id überlegen -> ist @id die richtige Wahl? Siehe https://webmasters.stackexchange.com/questions/98569/what-is-the-use-of-id-in-json-ld-syntax
+
+@id sind Node identifiers: https://www.w3.org/TR/2014/REC-json-ld-20140116/#node-identifiers
+Infos zu @id : https://webmasters.stackexchange.com/questions/98569/what-is-the-use-of-id-in-json-ld-syntax
+
+2. am besten alle contactPoint und natürlich die Termine für Vorlesungen als Event mit eventSchedule nutzen
